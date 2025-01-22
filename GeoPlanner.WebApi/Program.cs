@@ -1,9 +1,4 @@
 using GeoPlanner.Infrastructure.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using Microsoft.AspNetCore.Cryptography;
-using System.Text;
-using GeoPlanner.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,25 +20,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    {
-        using var scope = app.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<GeoPlannerDbContext>();
-        var created = dbContext.Database.EnsureCreated();
-        if (created)
-        {
-            Console.WriteLine("Database created successfully");
-        }
-        var isCreated = dbContext.AddAdminUser("admin", Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: "admin123",
-                salt: Encoding.UTF8.GetBytes("admin"),
-                prf: KeyDerivationPrf.HMACSHA1,
-                iterationCount: 10000,
-                numBytesRequested: 256 / 8)));
-        if (isCreated)
-        {
-            dbContext.SaveChanges();
-        }
-    }
 }
 
 app.UseHttpsRedirection();

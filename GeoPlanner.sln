@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoPlanner.Application.Shar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoPlanner.Infrastructure", "GeoPlanner.Infrastructure\GeoPlanner.Infrastructure.csproj", "{91313CE6-3B3C-4FBD-82D1-114FAAFA046A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoPlanner.DbInitializator", "GeoPlanner.DbInitializator\GeoPlanner.DbInitializator.csproj", "{0BBFD382-63AF-48A2-BB95-DD6083137B41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{91313CE6-3B3C-4FBD-82D1-114FAAFA046A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91313CE6-3B3C-4FBD-82D1-114FAAFA046A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91313CE6-3B3C-4FBD-82D1-114FAAFA046A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BBFD382-63AF-48A2-BB95-DD6083137B41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BBFD382-63AF-48A2-BB95-DD6083137B41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BBFD382-63AF-48A2-BB95-DD6083137B41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BBFD382-63AF-48A2-BB95-DD6083137B41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -83,6 +89,7 @@ Global
 		{27E45ADA-6608-4D76-91BC-7382D4C4C44F} = {9C2A6274-F91E-4A45-8219-C51D85D5EA7D}
 		{B4D3DB1A-21CB-407D-9B82-A5C5CFEAEE55} = {9C2A6274-F91E-4A45-8219-C51D85D5EA7D}
 		{91313CE6-3B3C-4FBD-82D1-114FAAFA046A} = {9C2A6274-F91E-4A45-8219-C51D85D5EA7D}
+		{0BBFD382-63AF-48A2-BB95-DD6083137B41} = {9C2A6274-F91E-4A45-8219-C51D85D5EA7D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A7AC130-33BE-4B5B-99AF-D4A049A38C88}

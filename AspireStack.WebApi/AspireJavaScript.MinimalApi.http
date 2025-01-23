@@ -1,0 +1,6 @@
+@AspireStack.WebApi_HostAddress = http://localhost:5084
+
+GET {{AspireStack.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

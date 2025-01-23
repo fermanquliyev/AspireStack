@@ -1,6 +1,0 @@
-@GeoPlanner.WebApi_HostAddress = http://localhost:5084
-
-GET {{GeoPlanner.WebApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

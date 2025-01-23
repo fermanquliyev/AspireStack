@@ -23,7 +23,7 @@ namespace GeoPlanner.WebApi.DynamicRouteMapping
                 {
                     var httpMethod = GetHttpMethod(method.Name); // Determine HTTP method
                     var serviceName = serviceType.Name.Replace("AppService", "");
-                    var route = $"/{serviceType.Name.Replace("AppService", "")}/{method.Name}";
+                    var route = $"/{serviceName}/{method.Name}";
 
                     // Register the route dynamically based on HTTP method
                     switch (httpMethod)
@@ -31,17 +31,14 @@ namespace GeoPlanner.WebApi.DynamicRouteMapping
                         case "GET":
                             var getDelegate = CreateEndpointDelegate(app, serviceType, method);
                             var getRoute = app.MapGet(route, getDelegate).WithTags(serviceName).WithMetadata(method);
-                            //AddSwaggerParameters(getRoute, method, "GET"); // Add parameters to Swagger
                             break;
                         case "POST":
                             var postDelegate = CreateEndpointDelegate(app, serviceType, method);
                             var postRoute = app.MapPost(route, postDelegate).WithTags(serviceName).WithMetadata(method);
-                            //AddSwaggerParameters(postRoute, method, "POST"); // Add parameters to Swagger
                             break;
                         case "PUT":
                             var putDelegate = CreateEndpointDelegate(app, serviceType, method);
                             var putRoute = app.MapPut(route, putDelegate).WithTags(serviceName).WithMetadata(method);
-                            //AddSwaggerParameters(putRoute, method, "PUT"); // Add parameters to Swagger
                             break;
                         default:
                             throw new InvalidOperationException($"Unsupported HTTP method for {method.Name}");

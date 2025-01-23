@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GeoPlanner.Application
+namespace GeoPlanner.Application.AppService
 {
-    public static class ApplicationModule
+    public interface IAppService
     {
     }
 }

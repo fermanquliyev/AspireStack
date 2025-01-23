@@ -1,4 +1,6 @@
-using GeoPlanner.Infrastructure.EntityFrameworkCore;
+using GeoPlanner.Application.LocationManagement;
+using GeoPlanner.Infrastructure;
+using GeoPlanner.WebApi.DynamicRouteMapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,12 +9,18 @@ builder.AddServiceDefaults();
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.OperationFilter<DynamicRouteOperationFilter>(); // Register the filter
+});
 builder.Services.AddCors();
-builder.AddPostgresDbContext<GeoPlannerDbContext>("geoplannerdb");
+builder.RegisterInfrastructureModule("geoplannerdb");
+
+// Add other services
+builder.Services.AddScoped<LocationAppService>();
 
 var app = builder.Build();
-
+DynamicRouteMapper.RegisterDynamicRoutes(app);
 app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline.

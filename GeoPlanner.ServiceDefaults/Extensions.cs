@@ -99,21 +99,4 @@ public static class Extensions
 
         return app;
     }
-
-    public static IHostApplicationBuilder AddPostgresDbContext<TDbContext>(
-    this IHostApplicationBuilder builder,
-    string connectionName,
-    Action<NpgsqlDbContextOptionsBuilder>? configure = null) where TDbContext : DbContext
-    {
-        builder.Services.AddDbContextPool<TDbContext>(options =>
-        {
-            options.UseNpgsql(builder.Configuration.GetConnectionString(connectionName), npgsqlOptions =>
-            {
-                npgsqlOptions.EnableRetryOnFailure(5);
-                configure?.Invoke(npgsqlOptions);
-            });
-        });
-
-        return builder;
-    }
 }

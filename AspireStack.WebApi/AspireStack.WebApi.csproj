@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AspireStack.Infrastructure\AspireStack.Infrastructure.csproj" />
     <ProjectReference Include="..\AspireStack.ServiceDefaults\AspireStack.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\AspireStack.Services\AspireStack.Application.csproj" />
+    <ProjectReference Include="..\AspireStack.Application\AspireStack.Application.csproj" />
   </ItemGroup>
 
 </Project>

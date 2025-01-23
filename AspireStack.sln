@@ -19,9 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Domain", "Aspir
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Domain.Shared", "AspireStack.Domain.Shared\AspireStack.Domain.Shared.csproj", "{0E4DE1A5-E7D2-48FD-B6B1-3C274499A140}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Application", "AspireStack.Services\AspireStack.Application.csproj", "{27E45ADA-6608-4D76-91BC-7382D4C4C44F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Application", "AspireStack.Application\AspireStack.Application.csproj", "{27E45ADA-6608-4D76-91BC-7382D4C4C44F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Application.Shared", "AspireStack.Services.Shared\AspireStack.Application.Shared.csproj", "{B4D3DB1A-21CB-407D-9B82-A5C5CFEAEE55}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Application.Shared", "AspireStack.Application.Shared\AspireStack.Application.Shared.csproj", "{B4D3DB1A-21CB-407D-9B82-A5C5CFEAEE55}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Infrastructure", "AspireStack.Infrastructure\AspireStack.Infrastructure.csproj", "{91313CE6-3B3C-4FBD-82D1-114FAAFA046A}"
 EndProject

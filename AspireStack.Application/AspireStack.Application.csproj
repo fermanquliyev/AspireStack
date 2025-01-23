@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AspireStack.Core\AspireStack.Domain.csproj" />
-    <ProjectReference Include="..\AspireStack.Services.Shared\AspireStack.Application.Shared.csproj" />
+    <ProjectReference Include="..\AspireStack.Application.Shared\AspireStack.Application.Shared.csproj" />
   </ItemGroup>
 
 </Project>

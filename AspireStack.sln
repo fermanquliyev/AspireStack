@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "aspire", "aspire", "{9A68C2
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9C2A6274-F91E-4A45-8219-C51D85D5EA7D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Domain", "AspireStack.Core\AspireStack.Domain.csproj", "{021BECFA-F491-43C4-983E-37BD9FF93295}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Domain", "AspireStack.Domain\AspireStack.Domain.csproj", "{021BECFA-F491-43C4-983E-37BD9FF93295}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Domain.Shared", "AspireStack.Domain.Shared\AspireStack.Domain.Shared.csproj", "{0E4DE1A5-E7D2-48FD-B6B1-3C274499A140}"
 EndProject

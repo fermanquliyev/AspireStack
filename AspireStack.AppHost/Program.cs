@@ -14,15 +14,15 @@ var migrationService = builder.AddProject<Projects.AspireStack_DbInitializator>(
     .WaitFor(db)
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName);
 
-var AspireStackapi = builder.AddProject<Projects.AspireStack_WebApi>("AspireStackApi")
+var AspireStackApi = builder.AddProject<Projects.AspireStack_WebApi>("AspireStackApi")
     .WithReference(db)
     .WaitFor(db)
     .WaitForCompletion(migrationService)
     .WithExternalHttpEndpoints();
 
-builder.AddNpmApp("angular", "../AspireStack.Angular")
-    .WithReference(AspireStackapi)
-    .WaitFor(AspireStackapi)
+builder.AddNpmApp("aspirestackui", "../AspireStack.Angular")
+    .WithReference(AspireStackApi)
+    .WaitFor(AspireStackApi)
     .WithHttpEndpoint(env: "PORT")
     .WithExternalHttpEndpoints()
     .PublishAsDockerFile();

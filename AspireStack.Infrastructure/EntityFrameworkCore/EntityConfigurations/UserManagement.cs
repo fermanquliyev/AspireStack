@@ -1,3 +1,4 @@
+using AspireStack.Domain.Entities;
 using AspireStack.Domain.Entities.UserManagement;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL.ValueGeneration;
@@ -21,6 +22,7 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                 entity.Property(e => e.PasswordHashed)
                     .IsRequired()
                     .HasMaxLength(100);
+                entity.ConfigureAuditProperties();
             });
         }
     }

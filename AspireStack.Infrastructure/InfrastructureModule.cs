@@ -1,33 +1,44 @@
 using AspireStack.Domain.Repository;
+using AspireStack.Domain.Services;
 using AspireStack.Infrastructure.EntityFrameworkCore;
+using AspireStack.Infrastructure.Jwt;
 using AspireStack.Infrastructure.Repository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AspireStack.Infrastructure
 {
     public static class InfrastructureModule
     {
         /// <summary>
-        /// Register infrastructure module
+        /// Register infrastructure module with AspireStackDbContext
         /// </summary>
         /// <param name="builder">The application builder</param>
         /// <param name="dbConnectionName">The name of the database connection string</param>
         public static void RegisterInfrastructureModule(this IHostApplicationBuilder builder, string dbConnectionName)
         {
             builder.AddPostgresDbContext<AspireStackDbContext>(dbConnectionName);
-            builder.Services.AddScoped<DbContext>(b => b.GetRequiredService<AspireStackDbContext>());
+            AddInfrastructureServices(builder);
+            builder.Services.AddScoped<DbContext, AspireStackDbContext>();
+        }
+
+        /// <summary>
+        /// Register infrastructure module with only services
+        /// </summary>
+        /// <param name="builder"></param>
+        public static void AddInfrastructureServices(this IHostApplicationBuilder builder)
+        {
             builder.Services.AddScoped<IAsyncQueryableExecuter, AsyncQueryableExecuter>();
             builder.Services.AddScoped<IAsyncQueryableProvider, EfCoreAsyncQueryableProvider>();
             builder.Services.AddScoped(typeof(IRepository<,>), typeof(EfCoreRepository<,>));
+            builder.Services.AddScoped(typeof(IUnitOfWork), typeof(EfUnitOfWork));
+            builder.Services.AddScoped(typeof(IJwtTokenHandler), typeof(JwtTokenHandler));
+            builder.Services.AddScoped(typeof(ICurrentUser<>), typeof(CurrentUser<>));
+            builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
         }
 
         private static IHostApplicationBuilder AddPostgresDbContext<TDbContext>(

@@ -1,4 +1,5 @@
 using AspireStack.Application.AppService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Text.Json;
@@ -18,30 +19,59 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             {
                 // Get service methods
                 var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                var serviceAuthAttribute = serviceType.GetCustomAttribute<AuthorizeAttribute>();
+                var allowAnonymous = serviceAuthAttribute == null || serviceType.GetCustomAttribute<AllowAnonymousAttribute>() != null;
 
                 foreach (var method in methods)
                 {
                     var httpMethod = GetHttpMethod(method.Name); // Determine HTTP method
                     var serviceName = serviceType.Name.Replace("AppService", "");
                     var route = $"/{serviceName}/{method.Name}";
+                    var methodAuthAttribute = method.GetCustomAttribute<AuthorizeAttribute>();
+                    var methodAllowAnonymous = (allowAnonymous && methodAuthAttribute == null) || method.GetCustomAttribute<AllowAnonymousAttribute>() != null;
+
+                    RouteHandlerBuilder routeHandler;
 
                     // Register the route dynamically based on HTTP method
                     switch (httpMethod)
                     {
                         case "GET":
                             var getDelegate = CreateEndpointDelegate(app, serviceType, method);
-                            var getRoute = app.MapGet(route, getDelegate).WithTags(serviceName).WithMetadata(method);
+                            routeHandler = app.MapGet(route, getDelegate).WithTags(serviceName).WithMetadata(method);
                             break;
                         case "POST":
                             var postDelegate = CreateEndpointDelegate(app, serviceType, method);
-                            var postRoute = app.MapPost(route, postDelegate).WithTags(serviceName).WithMetadata(method);
+                            routeHandler = app.MapPost(route, postDelegate).WithTags(serviceName).WithMetadata(method);
                             break;
                         case "PUT":
                             var putDelegate = CreateEndpointDelegate(app, serviceType, method);
-                            var putRoute = app.MapPut(route, putDelegate).WithTags(serviceName).WithMetadata(method);
+                            routeHandler = app.MapPut(route, putDelegate).WithTags(serviceName).WithMetadata(method);
+                            break;
+                        case "DELETE":
+                            var delDelegate = CreateEndpointDelegate(app, serviceType, method);
+                            routeHandler = app.MapDelete(route, delDelegate).WithTags(serviceName).WithMetadata(method);
                             break;
                         default:
                             throw new InvalidOperationException($"Unsupported HTTP method for {method.Name}");
+                    }
+                    if (!methodAllowAnonymous)
+                    {
+                        if (methodAuthAttribute != null)
+                        {
+                            routeHandler.RequireAuthorization(methodAuthAttribute.Policy);
+                        }
+                        else if (serviceAuthAttribute != null)
+                        {
+                            routeHandler.RequireAuthorization(serviceAuthAttribute.Policy);
+                        }
+                        else
+                        {
+                            routeHandler.RequireAuthorization();
+                        }
+                    }
+                    else
+                    {
+                        routeHandler.AllowAnonymous();
                     }
                 }
             }
@@ -68,6 +98,12 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 methodName.Contains("Change", StringComparison.OrdinalIgnoreCase))
             {
                 return "PUT";
+            }
+
+            if (methodName.Contains("Delete", StringComparison.OrdinalIgnoreCase) ||
+                methodName.Contains("Remove", StringComparison.OrdinalIgnoreCase))
+            {
+                return "DELETE";
             }
 
             return "POST"; // Default to POST

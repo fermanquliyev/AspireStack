@@ -10,7 +10,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -18,6 +17,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\AspireStack.Domain.Shared\AspireStack.Domain.Shared.csproj" />
+		<ProjectReference Include="..\AspireStack.Domain\AspireStack.Domain.csproj" />
 		<ProjectReference Include="..\AspireStack.Infrastructure\AspireStack.Infrastructure.csproj" />
 		<ProjectReference Include="..\AspireStack.ServiceDefaults\AspireStack.ServiceDefaults.csproj" />
 	</ItemGroup>

@@ -4,9 +4,17 @@
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
     "types": [
-      "jasmine"
-    ]
+      "jasmine",
+      "@angular/localize"
+    ],
+    "paths": {
+      "@docs-components/*": ["./src/components/*"]
+    }
   },
+  "files": [
+    "src/test.ts",
+    "./src/types/JwtPayload.ts",
+  ],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.d.ts"

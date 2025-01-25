@@ -5,10 +5,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Data;
 using System.Linq.Dynamic.Core;
+using Microsoft.EntityFrameworkCore.Query;
+using OpenTelemetry.Resources;
 
 namespace AspireStack.Infrastructure.Repository
 {
-    public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : Entity<TKey>
+    public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : Entity<TKey> where TKey : struct
     {
         private readonly DbContext dbContext;
         private readonly IAsyncQueryableExecuter asyncQueryableExecuter;
@@ -54,6 +56,27 @@ namespace AspireStack.Infrastructure.Repository
             {
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
+        }
+
+        public async Task<int> BulkDeleteAsync([NotNull] Func<TEntity, bool> entitySelector, bool autoSave = false, CancellationToken cancellationToken = default)
+        {
+            await dbContext.Set<TEntity>().Where(entitySelector).AsQueryable().ExecuteDeleteAsync(cancellationToken);
+            if (autoSave)
+            {
+                return await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            return 0;
+        }
+
+        public async Task<int> BulkUpdateAsync<TProperty>([NotNull] Func<TEntity, bool> entitySelector, [NotNull] Func<TEntity, TProperty> propertyExpression, TProperty setValue, bool autoSave = false, CancellationToken cancellationToken = default)
+        {
+            Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> expression = x => x.SetProperty(propertyExpression, setValue);
+            await dbContext.Set<TEntity>().Where(entitySelector).AsQueryable().ExecuteUpdateAsync(expression, cancellationToken);
+            if (autoSave)
+            {
+                return await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            return 0;
         }
 
         public async Task<TEntity?> FindAsync([NotNull] Expression<Func<TEntity, bool>> predicate, bool includeDetails = true, CancellationToken cancellationToken = default)
@@ -137,21 +160,6 @@ namespace AspireStack.Infrastructure.Repository
             {
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
-        }
-
-        public IQueryable<TEntity> WithDetails()
-        {
-            return dbContext.Set<TEntity>();
-        }
-
-        public IQueryable<TEntity> WithDetails(params Expression<Func<TEntity, object>>[] propertySelectors)
-        {
-            var query = dbContext.Set<TEntity>().AsQueryable();
-            foreach (var propertySelector in propertySelectors)
-            {
-                query = query.Include(propertySelector);
-            }
-            return query;
         }
 
         public async Task<IQueryable<TEntity>> WithDetailsAsync()

@@ -1,9 +1,12 @@
 ﻿
 using System.Diagnostics;
 using System.Text;
+using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Infrastructure;
 using AspireStack.Infrastructure.EntityFrameworkCore;
+using AspireStack.Infrastructure.Jwt;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -47,16 +50,7 @@ public class ApiDbInitializer(
 
     private static void SeedAdminUser(AspireStackDbContext dbContext)
     {
-        var isCreated = dbContext.AddAdminUser("admin", Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                        password: "admin123",
-                        salt: Encoding.UTF8.GetBytes("admin"),
-                        prf: KeyDerivationPrf.HMACSHA1,
-                        iterationCount: 10000,
-                        numBytesRequested: 256 / 8)));
-        if (isCreated)
-        {
-            dbContext.SaveChanges();
-        }
+        dbContext.AddAdminUser("admin", "admin123");
     }
 
     private static async Task EnsureDatabaseAsync(AspireStackDbContext dbContext, CancellationToken cancellationToken)

@@ -208,6 +208,10 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             {
                 args.Add(DateTime.TryParse(value, out var dateTimeValue) ? dateTimeValue : (param.ParameterType == typeof(DateTime?) ? (DateTime?)null : DateTime.MinValue));
             }
+            else if (param.ParameterType == typeof(DateOnly) || param.ParameterType == typeof(DateOnly?))
+            {
+                args.Add(DateOnly.TryParse(value, out var dateTimeValue) ? dateTimeValue : (param.ParameterType == typeof(DateOnly?) ? (DateOnly?)null : DateOnly.MinValue));
+            }
             else if (param.ParameterType == typeof(TimeSpan) || param.ParameterType == typeof(TimeSpan?))
             {
                 args.Add(TimeSpan.TryParse(value, out var timeValue) ? timeValue : (param.ParameterType == typeof(TimeSpan?) ? (TimeSpan?)null : TimeSpan.MinValue));

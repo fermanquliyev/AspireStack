@@ -75,19 +75,9 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     };
                 }
             }
-            if (requireAuthorization)
+            if(requireAuthorization)
             {
-                op.Parameters.Add(new OpenApiParameter
-                {
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Required = true,
-                    Schema = new OpenApiSchema
-                    {
-                        Type = "string",
-                        Default = new OpenApiString("Bearer <token>")
-                    }
-                });
+                op.Description += " This operation requires authorization.";
             }
 
             var returnType = method.ReturnType;
@@ -225,6 +215,8 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 { typeof(Guid?), "string" },
                 { typeof(DateTime), "string" },
                 { typeof(DateTime?), "string" },
+                { typeof(DateOnly), "string" },
+                { typeof(DateOnly?), "string" },
                 { typeof(TimeSpan), "string" },
                 { typeof(TimeSpan?), "string" },
                 { typeof(object), "object" }
@@ -256,6 +248,8 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 { typeof(Guid?), new OpenApiString("8227e1f9-8f13-4325-85a8-1068fe0771b7") },
                 { typeof(DateTime), new OpenApiDateTime(DateTime.Now) },
                 { typeof(DateTime?), new OpenApiDateTime(DateTime.Now) },
+                { typeof(DateOnly), new OpenApiDate(DateTime.Now.Date) },
+                { typeof(DateOnly?), new OpenApiDateTime(DateTime.Now.Date) },
                 { typeof(TimeSpan), new OpenApiString(TimeSpan.MaxValue.ToString()) },
                 { typeof(TimeSpan?), new OpenApiString(TimeSpan.MaxValue.ToString()) },
                 { typeof(object), new OpenApiObject() }

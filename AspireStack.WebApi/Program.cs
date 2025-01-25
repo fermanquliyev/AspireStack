@@ -1,8 +1,10 @@
+using AspireStack.Application.AppService;
 using AspireStack.Infrastructure;
 using AspireStack.WebApi.DynamicRouteMapping;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +17,31 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.OperationFilter<DynamicRouteOperationFilter>(); // Register the filter
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[] {}
+            }
+        });
 });
+
 builder.Services.AddCors();
 builder.RegisterInfrastructureModule("AspireStackDb");
 builder.Services.AddAuthorization();
@@ -33,6 +59,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
+RegisterAppServices(builder);
 
 var app = builder.Build();
 DynamicRouteMapper.RegisterDynamicRoutes(app);
@@ -74,7 +101,15 @@ app.MapGet("/weatherforecast", () =>
 
 app.Run();
 
-
+static void RegisterAppServices(WebApplicationBuilder builder)
+{
+    var appServiceTypes = typeof(IAppService).Assembly.GetTypes()
+                    .Where(t => typeof(IAppService).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+    foreach (var appServiceType in appServiceTypes)
+    {
+        builder.Services.AddScoped(appServiceType);
+    }
+}
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {

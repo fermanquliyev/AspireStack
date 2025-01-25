@@ -12,58 +12,82 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             // Get the method info for the current operation
             var methodInfos = context.ApiDescription.ActionDescriptor.EndpointMetadata
                 .OfType<MethodInfo>().ToList();
-            var methodInfo = methodInfos.FirstOrDefault(x => x.ToString().Contains("AspireStack")) ?? methodInfos.FirstOrDefault();
+            var methodInfo = methodInfos.FirstOrDefault(x => x.DeclaringType?.FullName?.Contains("AspireStack.Application") ?? false);
+            methodInfo ??= methodInfos.FirstOrDefault();
+            var requireAuthorization = context.ApiDescription.ActionDescriptor.EndpointMetadata
+                .OfType<string>().ToList().Any(x => x == "RequireAuthorization");
 
             if (methodInfo != null)
             {
-                AddSwaggerParameters(operation, methodInfo, DynamicRouteMapper.GetHttpMethod(methodInfo.Name));
+                AddSwaggerParameters(operation, methodInfo, DynamicRouteMapper.GetHttpMethod(methodInfo.Name), true);
             }
         }
 
-        private static OpenApiOperation AddSwaggerParameters(OpenApiOperation op, MethodInfo method, string httpMethod)
+        private static OpenApiOperation AddSwaggerParameters(OpenApiOperation op, MethodInfo method, string httpMethod, bool requireAuthorization)
         {
             // Add method parameters to Swagger
             var parameters = method.GetParameters();
-            if (parameters.Length == 0) return op;
-            if (httpMethod == "GET")
+            if (parameters.Length > 0)
             {
+                if (httpMethod == "GET")
+                {
 
-                foreach (var param in parameters)
-                {
-                    var openApiParam = new OpenApiParameter()
+                    foreach (var param in parameters)
                     {
-                        Name = param.Name,
-                        In = ParameterLocation.Query,
-                        Required = true,
-                        Schema = new OpenApiSchema()
+                        var openApiParam = new OpenApiParameter()
                         {
-                            Type = GetOpenApiType(param.ParameterType),
-                            Default = GetOpenApiTypeDefault(param.ParameterType)
-                        }
-                    };
-                    op.Parameters.Add(openApiParam);
-                }
-            }
-            else
-            {
-                op.RequestBody = new OpenApiRequestBody()
-                {
-                    Content = new Dictionary<string, OpenApiMediaType>()
-                    {
-                        ["application/json"] = new OpenApiMediaType()
-                        {
+                            Name = System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(param.Name),
+                            In = ParameterLocation.Query,
+                            Required = true,
                             Schema = new OpenApiSchema()
                             {
-                                Type = "object",
-                                Properties = parameters.GetType().GetProperties().ToDictionary(p => p.Name, p => new OpenApiSchema()
+                                Type = GetOpenApiType(param.ParameterType),
+                                Default = GetOpenApiTypeDefault(param.ParameterType)
+                            }
+                        };
+                        op.Parameters.Add(openApiParam);
+                    }
+                }
+                else
+                {
+                    op.RequestBody = new OpenApiRequestBody()
+                    {
+                        Reference = new OpenApiReference()
+                        {
+                            Id = "requestBody",
+                            Type = ReferenceType.RequestBody
+                        },
+                        Content = new Dictionary<string, OpenApiMediaType>()
+                        {
+                            ["application/json"] = new OpenApiMediaType()
+                            {
+                                Schema = new OpenApiSchema()
                                 {
-                                    Type = GetOpenApiType(p.PropertyType),
-                                    Default = GetOpenApiTypeDefault(p.PropertyType)
-                                })
+                                    Type = "object",
+                                    Properties = parameters.GetType().GetProperties().ToDictionary(p => System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(p.Name), p => new OpenApiSchema()
+                                    {
+                                        Type = GetOpenApiType(p.PropertyType),
+                                        Default = GetOpenApiTypeDefault(p.PropertyType)
+                                    })
+                                }
                             }
                         }
+                    };
+                }
+            }
+            if (requireAuthorization)
+            {
+                op.Parameters.Add(new OpenApiParameter
+                {
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Required = true,
+                    Schema = new OpenApiSchema
+                    {
+                        Type = "string",
+                        Default = new OpenApiString("Bearer <token>")
                     }
-                };
+                });
             }
 
             var returnType = method.ReturnType;
@@ -100,8 +124,18 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                                     },
                                     ["data"] = new OpenApiSchema()
                                     {
-                                        Type = "object",
-                                        Properties = returnType.GetProperties().ToDictionary(p => p.Name, p => new OpenApiSchema()
+                                        Type = IsCollectionType(returnType) ? "array" : "object",
+                                        Items = IsCollectionType(returnType) ? new OpenApiSchema()
+                                        {
+                                            Type = GetOpenApiType(returnType.GetGenericArguments().FirstOrDefault() ?? returnType.GetElementType()),
+                                            Default = GetOpenApiTypeDefault(returnType.GetGenericArguments().FirstOrDefault() ?? returnType.GetElementType()),
+                                            Properties = (returnType.GetGenericArguments().FirstOrDefault() ?? returnType.GetElementType()).GetProperties().ToDictionary(p => System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(p.Name), p => new OpenApiSchema()
+                                            {
+                                                Type = GetOpenApiType(p.PropertyType),
+                                                Default = GetOpenApiTypeDefault(p.PropertyType)
+                                            })
+                                        } : null,
+                                        Properties = IsCollectionType(returnType) ? null : returnType.GetProperties().ToDictionary(p => System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(p.Name), p => new OpenApiSchema()
                                         {
                                             Type = GetOpenApiType(p.PropertyType),
                                             Default = GetOpenApiTypeDefault(p.PropertyType)
@@ -162,6 +196,11 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             };
 
             return op;
+        }
+
+        private static bool IsCollectionType(Type returnType)
+        {
+            return returnType.IsGenericType && (returnType.GetGenericTypeDefinition() == typeof(List<>) || returnType.GetGenericTypeDefinition() == typeof(IList<>) || returnType.GetGenericTypeDefinition() == typeof(IEnumerable<>)) || returnType.IsArray;
         }
 
         private static string GetOpenApiType(Type type)

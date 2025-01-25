@@ -50,7 +50,6 @@ namespace AspireStack.Infrastructure
             {
                 options.UseNpgsql(builder.Configuration.GetConnectionString(connectionName), npgsqlOptions =>
                 {
-                    npgsqlOptions.EnableRetryOnFailure(5);
                     configure?.Invoke(npgsqlOptions);
                 });
             });

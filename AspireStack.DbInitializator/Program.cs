@@ -22,13 +22,8 @@ builder.Services.AddDbContext<AspireStackDbContext>(options =>
     {
         npgsqlOptions.EnableRetryOnFailure(5);
         npgsqlOptions.MigrationsAssembly("AspireStack.DbInitializator");
-        // Workaround for https://github.com/dotnet/aspire/issues/1023
-        npgsqlOptions.ExecutionStrategy(c => new RetryingSqlServerRetryingExecutionStrategy(c));
     });
 });
-builder.EnrichNpgsqlDbContext<AspireStackDbContext>(settings =>
-    // Disable Aspire default retries as we're using a custom execution strategy
-    settings.DisableRetry = true);
 
 builder.AddInfrastructureServices();
 builder.Services.AddHttpContextAccessor();

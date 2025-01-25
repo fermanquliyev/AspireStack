@@ -1,4 +1,5 @@
 using AspireStack.Application.AppService;
+using AspireStack.Application.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -18,17 +19,18 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             foreach (var serviceType in appServiceTypes)
             {
                 // Get service methods
-                var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                var serviceAuthAttribute = serviceType.GetCustomAttribute<AuthorizeAttribute>();
-                var allowAnonymous = serviceAuthAttribute == null || serviceType.GetCustomAttribute<AllowAnonymousAttribute>() != null;
+                var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.DeclaringType == serviceType);
+                var serviceAuthAttribute = serviceType.GetCustomAttribute<AppServiceAuthorizeAttribute>();
+                var allowAnonymous = serviceAuthAttribute == null || serviceType.GetCustomAttribute<AppServiceAllowAnonymousAttribute>() != null;
 
                 foreach (var method in methods)
                 {
                     var httpMethod = GetHttpMethod(method.Name); // Determine HTTP method
                     var serviceName = serviceType.Name.Replace("AppService", "");
-                    var route = $"/{serviceName}/{method.Name}";
-                    var methodAuthAttribute = method.GetCustomAttribute<AuthorizeAttribute>();
-                    var methodAllowAnonymous = (allowAnonymous && methodAuthAttribute == null) || method.GetCustomAttribute<AllowAnonymousAttribute>() != null;
+                    var methodName = method.Name.Replace("Async", "");
+                    var route = $"/{serviceName}/{methodName}";
+                    var methodAuthAttribute = method.GetCustomAttribute<AppServiceAuthorizeAttribute>();
+                    var methodAllowAnonymous = (allowAnonymous && methodAuthAttribute == null) || method.GetCustomAttribute<AppServiceAllowAnonymousAttribute>() != null;
 
                     RouteHandlerBuilder routeHandler;
 
@@ -58,15 +60,15 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     {
                         if (methodAuthAttribute != null)
                         {
-                            routeHandler.RequireAuthorization(methodAuthAttribute.Policy);
+                            routeHandler.RequireAuthorization(methodAuthAttribute.Policy).WithMetadata("RequireAuthorization");
                         }
                         else if (serviceAuthAttribute != null)
                         {
-                            routeHandler.RequireAuthorization(serviceAuthAttribute.Policy);
+                            routeHandler.RequireAuthorization(serviceAuthAttribute.Policy).WithMetadata("RequireAuthorization");
                         }
                         else
                         {
-                            routeHandler.RequireAuthorization();
+                            routeHandler.RequireAuthorization().WithMetadata("RequireAuthorization");
                         }
                     }
                     else

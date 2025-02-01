@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace AspireStack.Domain.Services
 {
-    public interface ICurrentUser<TKey> where TKey : struct
+    /// <summary>
+    /// Represents the current user.
+    /// </summary>
+    /// <typeparam name="TKey">Type of Id of user.</typeparam>
+    public interface ICurrentUser<TKey> where TKey: struct, IParsable<TKey>
     {
         public TKey? Id { get; }
         public string? Username { get; }
@@ -16,5 +20,12 @@ namespace AspireStack.Domain.Services
         public string? PhoneNumber { get; }
         public string[]? Roles { get; }
         public bool IsAuthenticated { get; }
+    }
+
+    /// <summary>
+    /// Represents the current user. User's Id is of type Guid.
+    /// </summary>
+    public interface ICurrentUser : ICurrentUser<Guid>
+    {
     }
 }

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace AspireStack.Domain.Entities
 {
-    public abstract class Entity<T> where T : struct
+    public abstract class Entity<T>
     {
-        public required T Id { get; set; }
+        public virtual T Id { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, Routes } from '@angular/router';
 import { DefaultLayoutComponent } from './layout';
-import { CurrentUserService } from './services/CurrentUser.service';
+import { CurrentUserService } from './services/current-user.service';
 import { inject } from '@angular/core';
 
 const authGuard: CanActivateFn = (
@@ -84,28 +84,32 @@ export const routes: Routes = [
     path: '404',
     loadComponent: () => import('./views/pages/page404/page404.component').then(m => m.Page404Component),
     data: {
-      title: 'Page 404'
+      title: 'Page 404',
+      showInMenu: false
     }
   },
   {
     path: '500',
     loadComponent: () => import('./views/pages/page500/page500.component').then(m => m.Page500Component),
     data: {
-      title: 'Page 500'
+      title: 'Page 500',
+      showInMenu: false
     }
   },
   {
     path: 'login',
     loadComponent: () => import('./views/pages/login/login.component').then(m => m.LoginComponent),
     data: {
-      title: 'Login Page'
+      title: 'Login Page',
+      showInMenu: false
     }
   },
   {
     path: 'register',
     loadComponent: () => import('./views/pages/register/register.component').then(m => m.RegisterComponent),
     data: {
-      title: 'Register Page'
+      title: 'Register Page',
+      showInMenu: false
     }
   },
   { path: '**', redirectTo: 'dashboard' }

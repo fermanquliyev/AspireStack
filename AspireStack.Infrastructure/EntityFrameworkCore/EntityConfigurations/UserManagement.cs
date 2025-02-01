@@ -24,6 +24,34 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                     .HasMaxLength(100);
                 entity.ConfigureAuditProperties();
             });
+
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.ToTable("Roles", "UserManagement");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasValueGenerator<NpgsqlSequentialGuidValueGenerator>();
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+                entity.Property(e => e.Description)
+                    .HasMaxLength(100);
+                entity.Property(e => e.Permissions)
+                    .IsRequired()
+                    .HasConversion(
+                        v => string.Join(',', v),
+                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
+                entity.ConfigureAuditProperties();
+            });
+
+            modelBuilder.Entity<UserRole>(entity =>
+            {
+                entity.ToTable("UserRoles", "UserManagement");
+                entity.HasKey(e => new { e.UserId, e.RoleId });
+                entity.Property(e => e.UserId)
+                    .IsRequired();
+                entity.Property(e => e.RoleId)
+                    .IsRequired();
+            });
         }
     }
 }

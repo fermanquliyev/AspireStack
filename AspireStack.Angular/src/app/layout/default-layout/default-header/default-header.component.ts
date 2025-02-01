@@ -23,8 +23,8 @@ import {
 } from '@coreui/angular';
 
 import { IconDirective } from '@coreui/icons-angular';
-import { AuthService } from 'src/app/services/AuthService.service';
-import { CurrentUserService } from 'src/app/services/CurrentUser.service';
+import { AuthService } from 'src/app/services/auth-service.service';
+import { CurrentUserService } from 'src/app/services/current-user.service';
 
 @Component({
     selector: 'app-default-header',
@@ -35,9 +35,9 @@ export class DefaultHeaderComponent extends HeaderComponent {
 
   readonly #colorModeService = inject(ColorModeService);
   readonly colorMode = this.#colorModeService.colorMode;
-  readonly authService = inject(AuthService);
+  readonly authService = inject<AuthService>(AuthService);
   readonly router = inject(Router)
-  public readonly currentUser = inject(CurrentUserService);
+  public readonly currentUser = inject<CurrentUserService>(CurrentUserService);
 
   readonly colorModes = [
     { name: 'light', text: 'Light', icon: 'cilSun' },

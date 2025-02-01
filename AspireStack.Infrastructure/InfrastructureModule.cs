@@ -38,6 +38,7 @@ namespace AspireStack.Infrastructure
             builder.Services.AddScoped(typeof(IUnitOfWork), typeof(EfUnitOfWork));
             builder.Services.AddScoped(typeof(IJwtTokenHandler), typeof(JwtTokenHandler));
             builder.Services.AddScoped(typeof(ICurrentUser<>), typeof(CurrentUser<>));
+            builder.Services.AddScoped(typeof(ICurrentUser), typeof(CurrentUser));
             builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
         }
 

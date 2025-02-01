@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace AspireStack.Domain.Repository
 {
     public interface IRepository<TEntity, TKey>
-    where TEntity : Entity<TKey> where TKey : struct
+    where TEntity : Entity<TKey>
     {
         /// <summary>
         /// Get a single entity by the given <paramref name="predicate"/>.
@@ -77,13 +77,11 @@ namespace AspireStack.Domain.Repository
             CancellationToken cancellationToken = default
         );
 
-        IAsyncQueryableExecuter AsyncExecuter { get; }
-
         Task<IQueryable<TEntity>> WithDetailsAsync(); //TODO: CancellationToken
 
         Task<IQueryable<TEntity>> WithDetailsAsync(params Expression<Func<TEntity, object>>[] propertySelectors); //TODO: CancellationToken
 
-        Task<IQueryable<TEntity>> GetQueryableAsync(); //TODO: CancellationToken
+        IQueryable<TEntity> GetQueryable(); //TODO: CancellationToken
 
         /// <summary>
         /// Gets a list of entities by the given <paramref name="predicate"/>.

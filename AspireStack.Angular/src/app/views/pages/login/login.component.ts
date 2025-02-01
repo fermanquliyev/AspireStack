@@ -17,11 +17,10 @@ import {
 } from '@coreui/angular';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { WebApiResult } from '../../../../types/WebApiResult';
-import { AuthService } from 'src/app/services/AuthService.service';
+import { AuthServiceProxy } from 'src/app/services/api-services/api-service-proxies';
+import { AuthService } from 'src/app/services/auth-service.service';
 import { Router } from '@angular/router';
-import { WeatherForecasts } from 'src/types/weatherForecast';
-import { CurrentUserService } from 'src/app/services/CurrentUser.service';
+import { CurrentUserService } from 'src/app/services/current-user.service';
 
 @Component({
   selector: 'app-login',
@@ -50,31 +49,25 @@ export class LoginComponent {
   public email = signal('');
   public password = signal('');
   constructor(
-    private httpClient: HttpClient,
+    private authserviceProxy: AuthServiceProxy,
     private authService: AuthService,
     private currentUser: CurrentUserService,
     private router: Router
-  ) {
-  }
+  ) {}
 
   login(): void {
-    this.httpClient
-      .post<WebApiResult<string>>('/api/Auth/login', {
+    this.authserviceProxy
+      .login({
         email: this.email(),
         password: this.password(),
       })
       .subscribe({
-        next: (result) => {
-          if (result.success && result.data) {
-            this.authService.setAuthToken(result.data, 1);
-            this.currentUser.loadUserFromToken(result.data);
-            this.router.navigate(['/dashboard']);
-          } else {
-            console.error('Failed to login', result);
-            alert(result.message);
-          }
+        next: (token: string) => {
+          this.authService.setAuthToken(token, 1);
+          this.currentUser.loadUserFromToken(token);
+          this.router.navigate(['/dashboard']);
         },
-        error: console.error,
+        error: alert,
       });
   }
 }

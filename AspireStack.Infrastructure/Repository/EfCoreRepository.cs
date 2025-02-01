@@ -10,18 +10,14 @@ using OpenTelemetry.Resources;
 
 namespace AspireStack.Infrastructure.Repository
 {
-    public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : Entity<TKey> where TKey : struct
+    public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : Entity<TKey>
     {
         private readonly DbContext dbContext;
-        private readonly IAsyncQueryableExecuter asyncQueryableExecuter;
 
-        public EfCoreRepository(DbContext dbContext, IAsyncQueryableExecuter asyncQueryableExecuter)
+        public EfCoreRepository(DbContext dbContext)
         {
             this.dbContext = dbContext;
-            this.asyncQueryableExecuter = asyncQueryableExecuter;
         }
-
-        public IAsyncQueryableExecuter AsyncExecuter => asyncQueryableExecuter;
 
         public async Task DeleteAsync([NotNull] Expression<Func<TEntity, bool>> predicate, bool autoSave = false, CancellationToken cancellationToken = default)
         {
@@ -119,9 +115,9 @@ namespace AspireStack.Infrastructure.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<IQueryable<TEntity>> GetQueryableAsync()
+        public IQueryable<TEntity> GetQueryable()
         {
-            return await Task.FromResult(dbContext.Set<TEntity>().AsQueryable());
+            return dbContext.Set<TEntity>().AsQueryable();
         }
 
         public async Task<TEntity> InsertAsync([NotNull] TEntity entity, bool autoSave = false, CancellationToken cancellationToken = default)

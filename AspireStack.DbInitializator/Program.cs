@@ -24,7 +24,7 @@ builder.Services.AddDbContext<AspireStackDbContext>(options =>
         npgsqlOptions.MigrationsAssembly("AspireStack.DbInitializator");
     });
 });
-
+builder.Services.AddScoped<DbContext, AspireStackDbContext>();
 builder.AddInfrastructureServices();
 builder.Services.AddHttpContextAccessor();
 

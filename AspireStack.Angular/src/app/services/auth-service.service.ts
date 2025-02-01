@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CookieService } from './Cookie.service';
+import { CookieService } from './cookie.service';
 import { AppConstants } from '../app.constants';
 
 @Injectable({

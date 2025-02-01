@@ -8,7 +8,6 @@ import { ColorModeService } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { iconSubset } from './icons/icon-subset';
 import { HttpClient } from '@angular/common/http';
-import { WeatherForecasts } from '../types/weatherForecast';
 
 @Component({
     selector: 'app-root',

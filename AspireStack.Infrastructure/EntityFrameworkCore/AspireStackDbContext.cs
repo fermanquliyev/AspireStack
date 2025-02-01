@@ -35,6 +35,9 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore
         {
             if (ChangeTracker.HasChanges() && !ChangesTracked)
             {
+                var validatedEntries = ChangeTracker.Entries()
+                    .Where(e => typeof(IValidatedEntity).IsAssignableFrom(e.Entity.GetType()) &&
+                               (e.State == EntityState.Added || e.State == EntityState.Modified));
                 var added = ChangeTracker.Entries()
                     .Where(e => typeof(IAuditedEntity).IsAssignableFrom(e.Entity.GetType()) &&
                                 e.State == EntityState.Added);
@@ -44,6 +47,11 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore
                 var deleted = ChangeTracker.Entries()
                     .Where(e => (typeof(IAuditedEntity).IsAssignableFrom(e.Entity.GetType()) || typeof(ISoftDelete).IsAssignableFrom(e.Entity.GetType())) &&
                                 e.State == EntityState.Deleted);
+
+                foreach (var entity in validatedEntries)
+                {
+                    ((IValidatedEntity)entity.Entity).Validate();
+                }
 
                 foreach (var entity in added)
                 {
@@ -68,5 +76,7 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
     }
 }

@@ -50,32 +50,34 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 }
                 else
                 {
-                    op.RequestBody = new OpenApiRequestBody()
+                    var parameter = parameters.FirstOrDefault();
+                    if (parameter != null)
                     {
-                        Reference = new OpenApiReference()
+
+                        var props = parameter.ParameterType.GetProperties().ToDictionary(p => System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(p.Name), p => new OpenApiSchema()
                         {
-                            Id = "requestBody",
-                            Type = ReferenceType.RequestBody
-                        },
-                        Content = new Dictionary<string, OpenApiMediaType>()
+                            Type = GetOpenApiType(p.PropertyType),
+                            Default = GetOpenApiTypeDefault(p.PropertyType)
+                        });
+                        op.RequestBody = new OpenApiRequestBody()
                         {
-                            ["application/json"] = new OpenApiMediaType()
+                            Content = new Dictionary<string, OpenApiMediaType>()
                             {
-                                Schema = new OpenApiSchema()
+                                ["application/json"] = new OpenApiMediaType()
                                 {
-                                    Type = "object",
-                                    Properties = parameters.GetType().GetProperties().ToDictionary(p => System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(p.Name), p => new OpenApiSchema()
+                                    Schema = new OpenApiSchema()
                                     {
-                                        Type = GetOpenApiType(p.PropertyType),
-                                        Default = GetOpenApiTypeDefault(p.PropertyType)
-                                    })
+                                        Type = "object",
+                                        Properties = props
+                                    }
                                 }
                             }
-                        }
-                    };
+                        };
+
+                    }
                 }
             }
-            if(requireAuthorization)
+            if (requireAuthorization)
             {
                 op.Description += " This operation requires authorization.";
             }
@@ -223,6 +225,11 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             };
 
             // Return the corresponding JSON schema type or "object" for others
+            if (type.IsArray || (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(List<>) || type.GetGenericTypeDefinition() == typeof(IEnumerable<>))))
+            {
+                return "array";
+            }
+
             return validTypes.TryGetValue(type, out var schemaType) ? schemaType : "object";
         }
 
@@ -254,6 +261,11 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 { typeof(TimeSpan?), new OpenApiString(TimeSpan.MaxValue.ToString()) },
                 { typeof(object), new OpenApiObject() }
             };
+
+            if (type.IsArray || (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(List<>) || type.GetGenericTypeDefinition() == typeof(IEnumerable<>))))
+            {
+                return new OpenApiString("[]");
+            }
             // Return the corresponding JSON schema type or a new OpenApiObject for others
             return validTypes.TryGetValue(type, out var schemaType) ? schemaType : new OpenApiObject();
         }

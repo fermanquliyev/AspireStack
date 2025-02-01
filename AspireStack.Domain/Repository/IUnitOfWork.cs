@@ -9,8 +9,9 @@ namespace AspireStack.Domain.Repository
 {
     public interface IUnitOfWork : IDisposable
     {
-        IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : Entity<TKey> where TKey : struct;
+        IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : Entity<TKey>;
         Task<int> SaveChangesAsync();
         int SaveChanges();
+        IAsyncQueryableExecuter AsyncQueryableExecuter { get; }
     }
 }

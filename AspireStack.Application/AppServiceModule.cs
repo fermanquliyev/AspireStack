@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AspireStack.Application.AppService;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +10,15 @@ namespace AspireStack.Application
 {
     public static class AppServiceModule
     {
-        public static void RegisterAppServices()
+        public static void RegisterAppServices(this IServiceCollection services)
         {
             // Register app services here
+            var appServiceTypes = typeof(IAppService).Assembly.GetTypes()
+                    .Where(t => typeof(IAppService).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+            foreach (var appServiceType in appServiceTypes)
+            {
+                services.AddScoped(appServiceType);
+            }
         }
     }
 }

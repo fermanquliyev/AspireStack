@@ -1,5 +1,6 @@
 using AspireStack.Application.AppService;
 using AspireStack.Application.Security;
+using AspireStack.Domain.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -7,9 +8,14 @@ using System.Text.Json;
 
 namespace AspireStack.WebApi.DynamicRouteMapping
 {
-    public static class DynamicRouteMapper
+    internal static class DynamicRouteMapper
     {
-        public static void RegisterDynamicRoutes(WebApplication app)
+        /// <summary>
+        /// Registers dynamic routes for all services implementing IAppService.
+        /// </summary>
+        /// <param name="app"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        internal static void RegisterDynamicRoutes(this WebApplication app)
         {
             // Scan for all services implementing IAppService
             var appServiceTypes = AppDomain.CurrentDomain.GetAssemblies()
@@ -19,52 +25,44 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             foreach (var serviceType in appServiceTypes)
             {
                 // Get service methods
+                var notMappedAttribute = serviceType.GetCustomAttribute<NotMappedAttribute>();
+                if (notMappedAttribute != null)
+                {
+                    continue;
+                }
                 var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.DeclaringType == serviceType);
                 var serviceAuthAttribute = serviceType.GetCustomAttribute<AppServiceAuthorizeAttribute>();
                 var allowAnonymous = serviceAuthAttribute == null || serviceType.GetCustomAttribute<AppServiceAllowAnonymousAttribute>() != null;
 
                 foreach (var method in methods)
                 {
-                    var httpMethod = GetHttpMethod(method.Name); // Determine HTTP method
-                    var serviceName = serviceType.Name.Replace("AppService", "");
-                    var methodName = method.Name.Replace("Async", "");
-                    var route = $"/{serviceName}/{methodName}";
+                    notMappedAttribute = method.GetCustomAttribute<NotMappedAttribute>();
+                    if (notMappedAttribute != null)
+                    {
+                        continue;
+                    }
+                    var httpMethodAttribute = method.GetCustomAttribute<AspireHttpMethodAttribute>();
+                    var httpMethod = httpMethodAttribute?.Method.Method ?? GetHttpMethod(method.Name); // Determine HTTP method
+                    var controllerName = httpMethodAttribute?.ControllerName ?? serviceType.Name.Replace("AppService", "");
+                    var actionName = httpMethodAttribute?.ActionName ?? method.Name.Replace("Async", "");
+                    var route = $"/{controllerName}/{actionName}";
                     var methodAuthAttribute = method.GetCustomAttribute<AppServiceAuthorizeAttribute>();
                     var methodAllowAnonymous = (allowAnonymous && methodAuthAttribute == null) || method.GetCustomAttribute<AppServiceAllowAnonymousAttribute>() != null;
-
-                    RouteHandlerBuilder routeHandler;
-
-                    // Register the route dynamically based on HTTP method
-                    switch (httpMethod)
+                    var methodDelegate = CreateEndpointDelegate(app, serviceType, method);
+                    RouteHandlerBuilder routeHandler = httpMethod switch
                     {
-                        case "GET":
-                            var getDelegate = CreateEndpointDelegate(app, serviceType, method);
-                            routeHandler = app.MapGet(route, getDelegate).WithTags(serviceName).WithMetadata(method);
-                            break;
-                        case "POST":
-                            var postDelegate = CreateEndpointDelegate(app, serviceType, method);
-                            routeHandler = app.MapPost(route, postDelegate).WithTags(serviceName).WithMetadata(method);
-                            break;
-                        case "PUT":
-                            var putDelegate = CreateEndpointDelegate(app, serviceType, method);
-                            routeHandler = app.MapPut(route, putDelegate).WithTags(serviceName).WithMetadata(method);
-                            break;
-                        case "DELETE":
-                            var delDelegate = CreateEndpointDelegate(app, serviceType, method);
-                            routeHandler = app.MapDelete(route, delDelegate).WithTags(serviceName).WithMetadata(method);
-                            break;
-                        default:
-                            throw new InvalidOperationException($"Unsupported HTTP method for {method.Name}");
-                    }
+                        "GET" => app.MapGet(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        "POST" => app.MapPost(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        "PUT" => app.MapPut(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        "DELETE" => app.MapDelete(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        _ => throw new InvalidOperationException($"Unsupported HTTP method for {method.Name}"),
+                    };
                     if (!methodAllowAnonymous)
                     {
-                        if (methodAuthAttribute != null)
+                        var policy = methodAuthAttribute?.Policy ?? serviceAuthAttribute?.Policy;
+                        if (policy != null)
                         {
-                            routeHandler.RequireAuthorization(methodAuthAttribute.Policy).WithMetadata("RequireAuthorization");
-                        }
-                        else if (serviceAuthAttribute != null)
-                        {
-                            routeHandler.RequireAuthorization(serviceAuthAttribute.Policy).WithMetadata("RequireAuthorization");
+                            routeHandler.RequireAuthorization(policy).WithMetadata("RequireAuthorization");
                         }
                         else
                         {
@@ -79,37 +77,30 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             }
         }
 
-        public static string GetHttpMethod(string methodName)
+        /// <summary>
+        /// Determines the HTTP method based on the method name.
+        /// </summary>
+        /// <param name="methodName">The name of the method to evaluate.</param>
+        /// <returns>A string representing the HTTP method (GET, POST, PUT, DELETE).</returns>
+        internal static string GetHttpMethod(string methodName) => methodName switch
         {
-            // Define naming conventions for HTTP methods
-            if (methodName.Contains("Create", StringComparison.OrdinalIgnoreCase) ||
-                methodName.Contains("Insert", StringComparison.OrdinalIgnoreCase) ||
-                methodName.Contains("Post", StringComparison.OrdinalIgnoreCase))
-            {
-                return "POST";
-            }
+            var name when name.Contains("Create", StringComparison.OrdinalIgnoreCase) ||
+                          name.Contains("Insert", StringComparison.OrdinalIgnoreCase) ||
+                          name.Contains("Post", StringComparison.OrdinalIgnoreCase) => "POST",
 
-            if (methodName.Contains("Get", StringComparison.OrdinalIgnoreCase) ||
-                methodName.Contains("Retrieve", StringComparison.OrdinalIgnoreCase) ||
-                methodName.Contains("List", StringComparison.OrdinalIgnoreCase))
-            {
-                return "GET";
-            }
+            var name when name.Contains("Get", StringComparison.OrdinalIgnoreCase) ||
+                          name.Contains("Retrieve", StringComparison.OrdinalIgnoreCase) ||
+                          name.Contains("List", StringComparison.OrdinalIgnoreCase) => "GET",
 
-            if (methodName.Contains("Update", StringComparison.OrdinalIgnoreCase) ||
-                methodName.Contains("Change", StringComparison.OrdinalIgnoreCase))
-            {
-                return "PUT";
-            }
+            var name when name.Contains("Update", StringComparison.OrdinalIgnoreCase) ||
+                          name.Contains("Change", StringComparison.OrdinalIgnoreCase) ||
+                          name.Contains("Put", StringComparison.OrdinalIgnoreCase) => "PUT",
 
-            if (methodName.Contains("Delete", StringComparison.OrdinalIgnoreCase) ||
-                methodName.Contains("Remove", StringComparison.OrdinalIgnoreCase))
-            {
-                return "DELETE";
-            }
+            var name when name.Contains("Delete", StringComparison.OrdinalIgnoreCase) ||
+                          name.Contains("Remove", StringComparison.OrdinalIgnoreCase) => "DELETE",
 
-            return "POST"; // Default to POST
-        }
+            _ => "POST"
+        };
 
         private static Delegate CreateEndpointDelegate(WebApplication app, Type serviceType, MethodInfo method)
         {
@@ -120,8 +111,8 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 var service = scope.ServiceProvider.GetRequiredService(serviceType);
                 var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger(serviceType);
-                using var dbcontext = scope.ServiceProvider.GetRequiredService<DbContext>();
-                using var transaction = dbcontext.Database.BeginTransaction();
+                var dbcontext = scope.ServiceProvider.GetRequiredService<DbContext>();
+                var unitOFWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
                 // Deserialize parameters from the HTTP request
                 var parameters = method.GetParameters();
@@ -129,9 +120,9 @@ namespace AspireStack.WebApi.DynamicRouteMapping
 
                 foreach (var param in parameters)
                 {
-                    if (context.Request.Method == "GET")
+                    if (context.Request.Method == "GET" || context.Request.Method == "DELETE")
                     {
-                        // Query string for GET
+                        // Query string for GET/DELETE
                         var value = context.Request.Query[param.Name ?? string.Empty].FirstOrDefault();
                         AddQueryParamToMethodArgs(args, param, value);
                     }
@@ -146,6 +137,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     }
                 }
 
+                using var transaction = await dbcontext.Database.BeginTransactionAsync();
                 try
                 {
                     // Invoke the service method
@@ -159,10 +151,13 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                         result = returnProperty?.GetValue(task);
                     }
 
+                    // Save changes and commit transaction if SaveChanges or SaveChangesAsync was called
                     if (dbcontext.ChangeTracker.HasChanges())
                     {
-                        await transaction.CommitAsync();
+                        await dbcontext.SaveChangesAsync();
                     }
+                    await transaction.CommitAsync();
+
                     // Return response
                     await context.Response.WriteAsJsonAsync(new WebApiResult
                     {
@@ -188,82 +183,30 @@ namespace AspireStack.WebApi.DynamicRouteMapping
 
         private static void AddQueryParamToMethodArgs(List<object> args, ParameterInfo param, string? value)
         {
-            if (param.ParameterType == typeof(Guid) || param.ParameterType == typeof(Guid?))
+            object? parsedValue = param.ParameterType switch
             {
-                args.Add(Guid.TryParse(value, out var guidValue) ? guidValue : (param.ParameterType == typeof(Guid?) ? (Guid?)null : Guid.Empty));
-            }
-            else if (param.ParameterType == typeof(int) || param.ParameterType == typeof(int?))
-            {
-                args.Add(int.TryParse(value, out var intValue) ? intValue : (param.ParameterType == typeof(int?) ? (int?)null : 0));
-            }
-            else if (param.ParameterType == typeof(double) || param.ParameterType == typeof(double?))
-            {
-                args.Add(double.TryParse(value, out var doubleValue) ? doubleValue : (param.ParameterType == typeof(double?) ? (double?)null : 0.0));
-            }
-            else if (param.ParameterType == typeof(bool) || param.ParameterType == typeof(bool?))
-            {
-                args.Add(bool.TryParse(value, out var boolValue) ? boolValue : (param.ParameterType == typeof(bool?) ? (bool?)null : false));
-            }
-            else if (param.ParameterType == typeof(DateTime) || param.ParameterType == typeof(DateTime?))
-            {
-                args.Add(DateTime.TryParse(value, out var dateTimeValue) ? dateTimeValue : (param.ParameterType == typeof(DateTime?) ? (DateTime?)null : DateTime.MinValue));
-            }
-            else if (param.ParameterType == typeof(DateOnly) || param.ParameterType == typeof(DateOnly?))
-            {
-                args.Add(DateOnly.TryParse(value, out var dateTimeValue) ? dateTimeValue : (param.ParameterType == typeof(DateOnly?) ? (DateOnly?)null : DateOnly.MinValue));
-            }
-            else if (param.ParameterType == typeof(TimeSpan) || param.ParameterType == typeof(TimeSpan?))
-            {
-                args.Add(TimeSpan.TryParse(value, out var timeValue) ? timeValue : (param.ParameterType == typeof(TimeSpan?) ? (TimeSpan?)null : TimeSpan.MinValue));
-            }
-            else if (param.ParameterType == typeof(string))
-            {
-                args.Add(value ?? string.Empty);
-            }
-            else if (param.ParameterType == typeof(float) || param.ParameterType == typeof(float?))
-            {
-                args.Add(float.TryParse(value, out var floatValue) ? floatValue : (param.ParameterType == typeof(float?) ? (float?)null : 0f));
-            }
-            else if (param.ParameterType == typeof(long) || param.ParameterType == typeof(long?))
-            {
-                args.Add(long.TryParse(value, out var longValue) ? longValue : (param.ParameterType == typeof(long?) ? (long?)null : 0L));
-            }
-            else if (param.ParameterType == typeof(short) || param.ParameterType == typeof(short?))
-            {
-                args.Add(short.TryParse(value, out var shortValue) ? shortValue : (param.ParameterType == typeof(short?) ? (short?)null : (short)0));
-            }
-            else if (param.ParameterType == typeof(byte) || param.ParameterType == typeof(byte?))
-            {
-                args.Add(byte.TryParse(value, out var byteValue) ? byteValue : (param.ParameterType == typeof(byte?) ? (byte?)null : (byte)0));
-            }
-            else if (param.ParameterType == typeof(char) || param.ParameterType == typeof(char?))
-            {
-                args.Add(char.TryParse(value, out var charValue) ? charValue : (param.ParameterType == typeof(char?) ? (char?)null : '\0'));
-            }
-            else if (param.ParameterType == typeof(decimal) || param.ParameterType == typeof(decimal?))
-            {
-                args.Add(decimal.TryParse(value, out var decimalValue) ? decimalValue : (param.ParameterType == typeof(decimal?) ? (decimal?)null : 0m));
-            }
-            else if (param.ParameterType == typeof(uint) || param.ParameterType == typeof(uint?))
-            {
-                args.Add(uint.TryParse(value, out var uintValue) ? uintValue : (param.ParameterType == typeof(uint?) ? (uint?)null : 0u));
-            }
-            else if (param.ParameterType == typeof(ulong) || param.ParameterType == typeof(ulong?))
-            {
-                args.Add(ulong.TryParse(value, out var ulongValue) ? ulongValue : (param.ParameterType == typeof(ulong?) ? (ulong?)null : 0ul));
-            }
-            else if (param.ParameterType == typeof(ushort) || param.ParameterType == typeof(ushort?))
-            {
-                args.Add(ushort.TryParse(value, out var ushortValue) ? ushortValue : (param.ParameterType == typeof(ushort?) ? (ushort?)null : (ushort)0));
-            }
-            else if (param.ParameterType == typeof(sbyte) || param.ParameterType == typeof(sbyte?))
-            {
-                args.Add(sbyte.TryParse(value, out var sbyteValue) ? sbyteValue : (param.ParameterType == typeof(sbyte?) ? (sbyte?)null : (sbyte)0));
-            }
-            else
-            {
-                args.Add(Convert.ChangeType(value, param.ParameterType));
-            }
+                Type t when t == typeof(Guid) || t == typeof(Guid?) => Guid.TryParse(value, out var guidValue) ? guidValue : (t == typeof(Guid?) ? (Guid?)null : Guid.Empty),
+                Type t when t == typeof(int) || t == typeof(int?) => int.TryParse(value, out var intValue) ? intValue : (t == typeof(int?) ? (int?)null : 0),
+                Type t when t == typeof(double) || t == typeof(double?) => double.TryParse(value, out var doubleValue) ? doubleValue : (t == typeof(double?) ? (double?)null : 0.0),
+                Type t when t == typeof(bool) || t == typeof(bool?) => bool.TryParse(value, out var boolValue) ? boolValue : (t == typeof(bool?) ? (bool?)null : false),
+                Type t when t == typeof(DateTime) || t == typeof(DateTime?) => DateTime.TryParse(value, out var dateTimeValue) ? dateTimeValue : (t == typeof(DateTime?) ? (DateTime?)null : DateTime.MinValue),
+                Type t when t == typeof(DateOnly) || t == typeof(DateOnly?) => DateOnly.TryParse(value, out var dateOnlyValue) ? dateOnlyValue : (t == typeof(DateOnly?) ? (DateOnly?)null : DateOnly.MinValue),
+                Type t when t == typeof(TimeSpan) || t == typeof(TimeSpan?) => TimeSpan.TryParse(value, out var timeSpanValue) ? timeSpanValue : (t == typeof(TimeSpan?) ? (TimeSpan?)null : TimeSpan.MinValue),
+                Type t when t == typeof(string) => value ?? string.Empty,
+                Type t when t == typeof(float) || t == typeof(float?) => float.TryParse(value, out var floatValue) ? floatValue : (t == typeof(float?) ? (float?)null : 0f),
+                Type t when t == typeof(long) || t == typeof(long?) => long.TryParse(value, out var longValue) ? longValue : (t == typeof(long?) ? (long?)null : 0L),
+                Type t when t == typeof(short) || t == typeof(short?) => short.TryParse(value, out var shortValue) ? shortValue : (t == typeof(short?) ? (short?)null : (short)0),
+                Type t when t == typeof(byte) || t == typeof(byte?) => byte.TryParse(value, out var byteValue) ? byteValue : (t == typeof(byte?) ? (byte?)null : (byte)0),
+                Type t when t == typeof(char) || t == typeof(char?) => char.TryParse(value, out var charValue) ? charValue : (t == typeof(char?) ? (char?)null : '\0'),
+                Type t when t == typeof(decimal) || t == typeof(decimal?) => decimal.TryParse(value, out var decimalValue) ? decimalValue : (t == typeof(decimal?) ? (decimal?)null : 0m),
+                Type t when t == typeof(uint) || t == typeof(uint?) => uint.TryParse(value, out var uintValue) ? uintValue : (t == typeof(uint?) ? (uint?)null : 0u),
+                Type t when t == typeof(ulong) || t == typeof(ulong?) => ulong.TryParse(value, out var ulongValue) ? ulongValue : (t == typeof(ulong?) ? (ulong?)null : 0ul),
+                Type t when t == typeof(ushort) || t == typeof(ushort?) => ushort.TryParse(value, out var ushortValue) ? ushortValue : (t == typeof(ushort?) ? (ushort?)null : (ushort)0),
+                Type t when t == typeof(sbyte) || t == typeof(sbyte?) => sbyte.TryParse(value, out var sbyteValue) ? sbyteValue : (t == typeof(sbyte?) ? (sbyte?)null : (sbyte)0),
+                _ => Convert.ChangeType(value, param.ParameterType)
+            };
+
+            args.Add(parsedValue);
         }
     }
 }

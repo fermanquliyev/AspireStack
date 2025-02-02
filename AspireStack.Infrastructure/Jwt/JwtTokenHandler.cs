@@ -1,28 +1,17 @@
 ﻿using AspireStack.Domain.Entities.UserManagement;
-using Microsoft.Extensions.Configuration;
+using AspireStack.Domain.Services;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AspireStack.Infrastructure.Jwt
 {
-    public class JwtTokenHandler: IJwtTokenHandler
+    public class JwtTokenHandler : IUserTokenHandler
     {
-        private readonly IConfiguration configuration;
-
-        public JwtTokenHandler(IConfiguration configuration)
+        public string GenerateUserToken(User user, TokenParameters parameters)
         {
-            this.configuration = configuration;
-        }
-        public string GenerateJwtToken(User user)
-        {
-            var jwtSecret = configuration["Jwt:Secret"];
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(parameters.Secret));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new List<Claim>
                 {
@@ -36,13 +25,27 @@ namespace AspireStack.Infrastructure.Jwt
                     new("email_verified", user.EmailVerified.ToString())
                 };
 
+            if (user.Roles != null && user.Roles.Count != 0)
+            {
+                foreach (var role in user.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role.Name));
+                    if (role.Permissions != null && role.Permissions.Length != 0)
+                    {
+                        foreach (var permission in role.Permissions)
+                        {
+                            claims.Add(new Claim(ClaimTypes.Actor, permission));
+                        }
+                    }
+                }
+            }
+
             var token = new JwtSecurityToken(
-                issuer: configuration["Jwt:Issuer"],
-                audience: configuration["Jwt:Audience"],
+                issuer: parameters.Issuer,
+                audience: parameters.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddDays(int.TryParse(configuration["Jwt:ExpInDays"], out var expInDays) ? expInDays : 1),
-                signingCredentials: credentials
-            );
+                expires: DateTime.Now.AddDays(parameters.ExpInDays),
+                signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();
 

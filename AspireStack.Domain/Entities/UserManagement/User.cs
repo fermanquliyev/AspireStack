@@ -19,6 +19,29 @@ namespace AspireStack.Domain.Entities.UserManagement
         public Guid? LastModifierId { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime? DeletionTime { get; set; }
+        public List<Role> Roles { get; set; }
+
+        public void AddRole(Role role)
+        {
+            if (Roles == null)
+            {
+                Roles = new List<Role>();
+            }
+            if (Roles.Any(r => r.Id == role.Id))
+            {
+                return;
+            }
+            Roles.Add(role);
+        }
+
+        public void RemoveRole(Guid roleId)
+        {
+            if (Roles == null)
+            {
+                return;
+            }
+            Roles.RemoveAll(r => r.Id == roleId);
+        }
 
         public void Validate()
         {

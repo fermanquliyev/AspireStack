@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,6 +20,7 @@ namespace AspireStack.Domain.Services
         public string? LastName { get; }
         public string? PhoneNumber { get; }
         public string[]? Roles { get; }
+        public string[]? Permissions { get; }
         public bool IsAuthenticated { get; }
     }
 

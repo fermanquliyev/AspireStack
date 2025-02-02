@@ -1,32 +1,41 @@
 using AspireStack.Application;
+using AspireStack.Domain.Entities.UserManagement;
+using AspireStack.Domain.Services;
 using AspireStack.Infrastructure;
 using AspireStack.WebApi.DynamicRouteMapping;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.AddServiceDefaults();
-
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+internal class Program
 {
-    c.OperationFilter<DynamicRouteOperationFilter>(); // Register the filter
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    private static void Main(string[] args)
     {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.AddServiceDefaults();
+
+        // Add services to the container.
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(c =>
         {
+            c.OperationFilter<DynamicRouteOperationFilter>(); // Register the filter
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter a valid token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "Bearer"
+            });
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
             {
                 new OpenApiSecurityScheme
                 {
@@ -38,69 +47,66 @@ builder.Services.AddSwaggerGen(c =>
                 },
                 new string[] {}
             }
+                });
         });
-});
 
-builder.Services.AddCors();
-builder.RegisterInfrastructureModule("AspireStackDb");
-builder.Services.AddAuthorization();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o =>
-    {
-        o.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
-        o.TokenValidationParameters = new TokenValidationParameters
+        builder.Services.AddCors();
+        builder.RegisterInfrastructureModule("AspireStackDb");
+        var tokenParameters = builder.Configuration.GetSection("Jwt").Get<TokenParameters>();
+        ArgumentNullException.ThrowIfNull(tokenParameters, "Jwt parameters are not set.");
+        builder.Services.AddOptions<TokenParameters>().Bind(builder.Configuration.GetSection("Jwt"));
+        builder.Services.AddAuthorization(AddPolicies);
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(o =>
+            {
+                o.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = tokenParameters.Issuer,
+                    ValidAudience = tokenParameters.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenParameters.Secret)),
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+        builder.Services.AddControllers();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.RegisterAppServices();
+
+        var app = builder.Build();
+        app.RegisterDynamicRoutes();
+        app.MapDefaultEndpoints();
+        app.MapControllers();
+
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
         {
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"])),
-            ClockSkew = TimeSpan.Zero
-        };
-    });
-builder.Services.AddControllers();
-builder.Services.AddHttpContextAccessor();
-builder.Services.RegisterAppServices();
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
 
-var app = builder.Build();
-app.RegisterDynamicRoutes();
-app.MapDefaultEndpoints();
-app.MapControllers();
+        app.UseHttpsRedirection();
+        app.UseCors(static builder =>
+            builder.AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowAnyOrigin());
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+        app.Run();
+    }
 
-app.UseHttpsRedirection();
-app.UseCors(static builder =>
-    builder.AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowAnyOrigin());
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    /// <summary>
+    /// Add policies for authorization. Each policy is based on a permission.
+    /// </summary>
+    /// <param name="authentication"></param>
+    static void AddPolicies(AuthorizationOptions authentication)
+    {
+        var permissionNames = PermissionNames.Permissions;
+        foreach (var permission in permissionNames)
+        {
+            authentication.AddPolicy(permission, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim(ClaimTypes.Actor, permission);
+            });
+        }
+    }
 }

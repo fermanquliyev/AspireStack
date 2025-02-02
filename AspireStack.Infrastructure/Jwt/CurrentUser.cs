@@ -33,6 +33,7 @@ namespace AspireStack.Infrastructure.Jwt
         public string? PhoneNumber => claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone)?.Value;
 
         public string[]? Roles => claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToArray();
+        public string[]? Permissions => claims.Where(x => x.Type == ClaimTypes.Actor).Select(x => x.Value).ToArray();
 
         public bool IsAuthenticated => _isAuthenticated;
     }
@@ -66,6 +67,7 @@ namespace AspireStack.Infrastructure.Jwt
         public string? PhoneNumber => claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone)?.Value;
 
         public string[]? Roles => claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToArray();
+        public string[]? Permissions => claims.Where(x => x.Type == ClaimTypes.Actor).Select(x => x.Value).ToArray();
 
         public bool IsAuthenticated => _isAuthenticated;
     }

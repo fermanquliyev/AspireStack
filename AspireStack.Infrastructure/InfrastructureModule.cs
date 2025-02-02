@@ -36,10 +36,11 @@ namespace AspireStack.Infrastructure
             builder.Services.AddScoped<IAsyncQueryableProvider, EfCoreAsyncQueryableProvider>();
             builder.Services.AddScoped(typeof(IRepository<,>), typeof(EfCoreRepository<,>));
             builder.Services.AddScoped(typeof(IUnitOfWork), typeof(EfUnitOfWork));
-            builder.Services.AddScoped(typeof(IJwtTokenHandler), typeof(JwtTokenHandler));
+            builder.Services.AddScoped(typeof(IUserTokenHandler), typeof(JwtTokenHandler));
             builder.Services.AddScoped(typeof(ICurrentUser<>), typeof(CurrentUser<>));
             builder.Services.AddScoped(typeof(ICurrentUser), typeof(CurrentUser));
             builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
+            builder.Services.AddScoped(typeof(IUserPasswordHasher<>), typeof(AspirePasswordHasher<>));
         }
 
         private static IHostApplicationBuilder AddPostgresDbContext<TDbContext>(

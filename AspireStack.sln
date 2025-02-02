@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34417.21
@@ -26,6 +26,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Infrastructure", "AspireStack.Infrastructure\AspireStack.Infrastructure.csproj", "{91313CE6-3B3C-4FBD-82D1-114FAAFA046A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.DbInitializator", "AspireStack.DbInitializator\AspireStack.DbInitializator.csproj", "{0BBFD382-63AF-48A2-BB95-DD6083137B41}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{52F69FD1-A661-4594-B91C-4FEAB42AA901}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -22,6 +22,20 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                 entity.Property(e => e.PasswordHashed)
                     .IsRequired()
                     .HasMaxLength(100);
+                entity.HasMany(e => e.Roles)
+                    .WithMany(e => e.Users)
+                    .UsingEntity<UserRole>(
+                        j => j.HasOne(e => e.Role)
+                            .WithMany()
+                            .HasForeignKey(e => e.RoleId),
+                        j => j.HasOne(e => e.User)
+                            .WithMany()
+                            .HasForeignKey(e => e.UserId),
+                        j =>
+                        {
+                            j.HasKey(e => new { e.UserId, e.RoleId });
+                            j.ToTable("UserRoles", "UserManagement");
+                        });
                 entity.ConfigureAuditProperties();
             });
 
@@ -40,6 +54,20 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                     .HasConversion(
                         v => string.Join(',', v),
                         v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
+                entity.HasMany(e => e.Users)
+                    .WithMany(e => e.Roles)
+                    .UsingEntity<UserRole>(
+                        j => j.HasOne(e => e.User)
+                            .WithMany()
+                            .HasForeignKey(e => e.UserId),
+                        j => j.HasOne(e => e.Role)
+                            .WithMany()
+                            .HasForeignKey(e => e.RoleId),
+                        j =>
+                        {
+                            j.HasKey(e => new { e.UserId, e.RoleId });
+                            j.ToTable("UserRoles", "UserManagement");
+                        });
                 entity.ConfigureAuditProperties();
             });
 
@@ -51,6 +79,8 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                     .IsRequired();
                 entity.Property(e => e.RoleId)
                     .IsRequired();
+                entity.HasOne(e => e.User).WithOne().HasForeignKey<UserRole>(e => e.UserId);
+                entity.HasOne(e => e.Role).WithOne().HasForeignKey<UserRole>(e => e.RoleId);
             });
         }
     }

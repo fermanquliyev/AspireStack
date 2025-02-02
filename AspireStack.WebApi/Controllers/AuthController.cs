@@ -1,19 +1,27 @@
 ﻿using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
+using AspireStack.Domain.Shared.Enums;
 using AspireStack.Infrastructure.Jwt;
 using AspireStack.WebApi.DynamicRouteMapping;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 namespace AspireStack.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController(IJwtTokenHandler tokenProvider, IUnitOfWork unitOfWork, IPasswordHasher<User> passwordHasher, ICurrentUser<Guid> currentUser)
+    public class AuthController(IUserTokenHandler tokenProvider, IOptions<TokenParameters> tokenParameterOptions, IUnitOfWork unitOfWork, IUserPasswordHasher<User> passwordHasher, ICurrentUser<Guid> currentUser)
         : ControllerBase
     {
+        private readonly IUserTokenHandler tokenProvider = tokenProvider;
+        private readonly TokenParameters tokenParameters = tokenParameterOptions.Value ?? throw new ArgumentNullException(nameof(tokenParameterOptions));
+        private readonly IUnitOfWork unitOfWork = unitOfWork;
+        private readonly IUserPasswordHasher<User> passwordHasher = passwordHasher;
+        private readonly ICurrentUser<Guid> currentUser = currentUser;
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -23,7 +31,7 @@ namespace AspireStack.WebApi.Controllers
                 return Unauthorized("Email or password is wrong. Try again.");
             }
 
-            var token = tokenProvider.GenerateJwtToken(user);
+            var token = tokenProvider.GenerateUserToken(user, tokenParameters);
             return Ok(new WebApiResult { Data = token, StatusCode = 200, Success = true });
         }
 

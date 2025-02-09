@@ -23,19 +23,9 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                     .IsRequired()
                     .HasMaxLength(100);
                 entity.HasMany(e => e.Roles)
-                    .WithMany(e => e.Users)
-                    .UsingEntity<UserRole>(
-                        j => j.HasOne(e => e.Role)
-                            .WithMany()
-                            .HasForeignKey(e => e.RoleId),
-                        j => j.HasOne(e => e.User)
-                            .WithMany()
-                            .HasForeignKey(e => e.UserId),
-                        j =>
-                        {
-                            j.HasKey(e => new { e.UserId, e.RoleId });
-                            j.ToTable("UserRoles", "UserManagement");
-                        });
+                    .WithOne(e => e.User)
+                    .HasForeignKey(e => e.UserId);
+
                 entity.ConfigureAuditProperties();
             });
 
@@ -55,19 +45,8 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                         v => string.Join(',', v),
                         v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
                 entity.HasMany(e => e.Users)
-                    .WithMany(e => e.Roles)
-                    .UsingEntity<UserRole>(
-                        j => j.HasOne(e => e.User)
-                            .WithMany()
-                            .HasForeignKey(e => e.UserId),
-                        j => j.HasOne(e => e.Role)
-                            .WithMany()
-                            .HasForeignKey(e => e.RoleId),
-                        j =>
-                        {
-                            j.HasKey(e => new { e.UserId, e.RoleId });
-                            j.ToTable("UserRoles", "UserManagement");
-                        });
+                    .WithOne(e => e.Role)
+                    .HasForeignKey(e => e.RoleId);
                 entity.ConfigureAuditProperties();
             });
 
@@ -77,10 +56,12 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations
                 entity.HasKey(e => new { e.UserId, e.RoleId });
                 entity.Property(e => e.UserId)
                     .IsRequired();
+                entity.HasIndex(e => e.UserId);
                 entity.Property(e => e.RoleId)
                     .IsRequired();
-                entity.HasOne(e => e.User).WithOne().HasForeignKey<UserRole>(e => e.UserId);
-                entity.HasOne(e => e.Role).WithOne().HasForeignKey<UserRole>(e => e.RoleId);
+                entity.HasIndex(e => e.RoleId);
+                entity.HasOne(e => e.User).WithMany(x=>x.Roles).HasForeignKey(e => e.UserId);
+                entity.HasOne(e => e.Role).WithMany(x=>x.Users).HasForeignKey(e => e.RoleId);
             });
         }
     }

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AspireStack.DbInitializator.Migrations
 {
     [DbContext(typeof(AspireStackDbContext))]
-    [Migration("20250202004719_UserRoleRelations")]
-    partial class UserRoleRelations
+    [Migration("20250206233326_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -141,11 +141,9 @@ namespace AspireStack.DbInitializator.Migrations
 
                     b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("RoleId")
-                        .IsUnique();
+                    b.HasIndex("RoleId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserRoles", "UserManagement");
                 });
@@ -153,20 +151,30 @@ namespace AspireStack.DbInitializator.Migrations
             modelBuilder.Entity("AspireStack.Domain.Entities.UserManagement.UserRole", b =>
                 {
                     b.HasOne("AspireStack.Domain.Entities.UserManagement.Role", "Role")
-                        .WithOne()
-                        .HasForeignKey("AspireStack.Domain.Entities.UserManagement.UserRole", "RoleId")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AspireStack.Domain.Entities.UserManagement.User", "User")
-                        .WithOne()
-                        .HasForeignKey("AspireStack.Domain.Entities.UserManagement.UserRole", "UserId")
+                        .WithMany("Roles")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AspireStack.Domain.Entities.UserManagement.Role", b =>
+                {
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("AspireStack.Domain.Entities.UserManagement.User", b =>
+                {
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

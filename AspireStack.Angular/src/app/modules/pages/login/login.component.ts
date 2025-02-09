@@ -17,10 +17,10 @@ import {
 } from '@coreui/angular';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { AuthServiceProxy } from 'src/app/services/api-services/api-service-proxies';
-import { AuthService } from 'src/app/services/auth-service.service';
+import { AuthService } from '../../../services/auth-service.service';
 import { Router } from '@angular/router';
-import { CurrentUserService } from 'src/app/services/current-user.service';
+import { CurrentUserService } from '../../../services/current-user.service';
+import { ApiService, LoginRequest } from '../../../services/api-services/api-service-proxies';
 
 @Component({
   selector: 'app-login',
@@ -49,25 +49,20 @@ export class LoginComponent {
   public email = signal('');
   public password = signal('');
   constructor(
-    private authserviceProxy: AuthServiceProxy,
+    private client: ApiService,
     private authService: AuthService,
     private currentUser: CurrentUserService,
     private router: Router
   ) {}
 
   login(): void {
-    this.authserviceProxy
-      .login({
-        email: this.email(),
-        password: this.password(),
-      })
-      .subscribe({
-        next: (token: string) => {
-          this.authService.setAuthToken(token, 1);
-          this.currentUser.loadUserFromToken(token);
-          this.router.navigate(['/dashboard']);
-        },
-        error: alert,
+    this.client
+      .login( new LoginRequest({ email: this.email(), password: this.password() }))
+      .subscribe(response=>{
+        const token = response.data ?? '';
+        const expInDays = this.currentUser.loadUserFromToken(token);
+        this.authService.setAuthToken(token, expInDays);
+        this.router.navigate(['/dashboard']);
       });
   }
 }

@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AspireStack.Angular.ServiceGenerator\AspireStack.Angular.ServiceGenerator.csproj" />
     <ProjectReference Include="..\AspireStack.DbInitializator\AspireStack.DbInitializator.csproj" />
     <ProjectReference Include="..\AspireStack.WebApi\AspireStack.WebApi.csproj" />
   </ItemGroup>

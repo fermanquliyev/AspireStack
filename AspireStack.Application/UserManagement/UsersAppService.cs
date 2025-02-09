@@ -1,4 +1,5 @@
 ﻿using AspireStack.Application.AppService;
+using AspireStack.Application.AppService.DTOs;
 using AspireStack.Application.Security;
 using AspireStack.Application.UserManagement.DTOs;
 using AspireStack.Domain.Entities.UserManagement;
@@ -30,32 +31,58 @@ namespace AspireStack.Application.UserManagement
         }
 
         [AppServiceAuthorize(PermissionNames.User_View)]
-        public async Task<List<UserDto>> GetUsersAsync()
+        public async Task<PagedResult<UserDto>> GetUsersAsync(GetUsersInput usersInput)
         {
-            var query = userRepository.GetQueryable().Select(UserDto.FromUser);
-            return await unitOfWork.AsyncQueryableExecuter.ToListAsync(query);
+            var query = userRepository.GetQueryable();
+            if (!string.IsNullOrEmpty(usersInput.Filter))
+            {
+                query = query.Where(u => u.FirstName.Contains(usersInput.Filter) || u.LastName.Contains(usersInput.Filter) || u.Email.Contains(usersInput.Filter));
+            }
+            var totalCount = await unitOfWork.AsyncQueryableExecuter.CountAsync(query);
+            query = query.OrderBy(u => u.Id).Skip((usersInput.Page-1)*usersInput.PageSize).Take(usersInput.PageSize);
+            var items = await unitOfWork.AsyncQueryableExecuter.ToListAsync(query.Select(UserDto.FromUser));
+
+            return new PagedResult<UserDto>(items, totalCount);
         }
 
         [AppServiceAuthorize(PermissionNames.User_View)]
-        public async Task<UserDto> GetUserByIdAsync(Guid id)
+        public async Task<CreateEditUserDto> GetUserByIdAsync(Guid id)
         {
-            var user = await userRepository.FindAsync(u => u.Id == id);
+            var userQuery = unitOfWork.Repository<User, Guid>().WithDetails(x => x.Roles).Where(x => x.Id == id);
+            var user = await unitOfWork.AsyncQueryableExecuter.FirstOrDefaultAsync(userQuery);
             if (user == null)
             {
-                throw new Exception("User not found.");
+                throw new ApplicationException("User not found.");
             }
-            return UserDto.FromUser(user);
+            var resultDto = CreateEditUserDto.FromUser(user);
+
+            if(user.CreatorId.HasValue && user.CreatorId != Guid.Empty)
+            {
+                var creator = await userRepository.FindAsync(u => u.Id == user.CreatorId);
+                if (creator != null)
+                resultDto.CreatedUser = UserDto.FromUser(creator);
+            }
+
+            if (user.LastModifierId.HasValue && user.LastModifierId != Guid.Empty)
+            {
+                var lastModifier = await userRepository.FindAsync(u => u.Id == user.LastModifierId);
+                if (lastModifier != null)
+                    resultDto.LastModifiedUser = UserDto.FromUser(lastModifier);
+            }
+
+            return resultDto;
         }
 
         [AppServiceAuthorize(PermissionNames.User_Create)]
-        public async Task CreateUserAsync(CreateUserDto input)
+        public async Task CreateUserAsync(CreateEditUserDto input)
         {
             var user = new User
             {
-                Id = Guid.NewGuid(),
+                Username = input.Username,
                 FirstName = input.FirstName,
                 LastName = input.LastName,
-                Email = input.Email
+                Email = input.Email,
+                PhoneNumber = input.PhoneNumber
             };
             await userRepository.InsertAsync(user);
             var randomPassword = GenerateRandomPassword();
@@ -78,13 +105,15 @@ namespace AspireStack.Application.UserManagement
         }
 
         [AppServiceAuthorize(PermissionNames.User_Update)]
-        public async Task UpdateUserAsync(UpdateUserDto input)
+        public async Task UpdateUserAsync(CreateEditUserDto input)
         {
             var user = await userRepository.FindAsync(u => u.Id == input.Id);
             if (user != null)
             {
+                user.Username = input.Username;
                 user.FirstName = input.FirstName;
                 user.LastName = input.LastName;
+                user.PhoneNumber = input.PhoneNumber;
                 // Email cannot be updated.
 
                 var existingUserRoles = await userRoleRepository.GetListAsync(ur => ur.UserId == user.Id);

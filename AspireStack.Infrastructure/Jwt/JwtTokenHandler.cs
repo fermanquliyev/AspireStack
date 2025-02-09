@@ -1,5 +1,6 @@
 ﻿using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Domain.Services;
+using AspireStack.Domain.Shared.UserManagement;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -22,19 +23,19 @@ namespace AspireStack.Infrastructure.Jwt
                     new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                     new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new(JwtRegisteredClaimNames.AuthTime, DateTime.Now.ToString()),
-                    new("email_verified", user.EmailVerified.ToString())
+                    new(CustomClaimTypes.EmailVerified, user.EmailVerified.ToString())
                 };
 
             if (user.Roles != null && user.Roles.Count != 0)
             {
                 foreach (var role in user.Roles)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, role.Name));
-                    if (role.Permissions != null && role.Permissions.Length != 0)
+                    claims.Add(new(CustomClaimTypes.Role, role.Role.Name));
+                    if (role.Role.Permissions != null && role.Role.Permissions.Length != 0)
                     {
-                        foreach (var permission in role.Permissions)
+                        foreach (var permission in role.Role.Permissions)
                         {
-                            claims.Add(new Claim(ClaimTypes.Actor, permission));
+                            claims.Add(new(CustomClaimTypes.Permission, permission));
                         }
                     }
                 }

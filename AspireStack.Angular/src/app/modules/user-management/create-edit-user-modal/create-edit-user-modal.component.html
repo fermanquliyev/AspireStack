@@ -1,0 +1,144 @@
+<c-modal
+  #createEditUserModal
+  backdrop="static"
+  size="lg"
+  id="create-edit-user-modal"
+>
+  <form cForm #createEditUserForm="ngForm" (ngSubmit)="save()">
+    <c-modal-header>
+      <h5 cModalTitle>UserCreationModalTitle</h5>
+      <button [cModalToggle]="createEditUserModal.id" cButtonClose></button>
+    </c-modal-header>
+    <c-modal-body>
+      <c-tabs [activeItemKey]="'profile'">
+        <c-tabs-list variant="tabs">
+          <button cTab itemKey="profile">Profile</button>
+          <button cTab itemKey="roles">Roles</button>
+          <button *ngIf="userDto.id"  cTab itemKey="audit">Audit</button>
+        </c-tabs-list>
+        <c-tabs-content>
+          <c-tab-panel class="p-3" itemKey="profile">
+            <c-row class="g-3">
+              <c-col [xs]>
+                <label cLabel for="username">User Name</label>
+                <input
+                  id="username"
+                  aria-label="Username"
+                  cFormControl
+                  placeholder="Username"
+                  name="username"
+                  [(ngModel)]="userDto.username"
+                />
+              </c-col>
+              <c-col [xs]>
+                <label cLabel for="user-email">Email</label>
+                <input
+                  aria-label="Email"
+                  id="user-email"
+                  cFormControl
+                  placeholder="Email"
+                  name="email"
+                  [disabled]="!!userDto.id"
+                  [(ngModel)]="userDto.email"
+                />
+              </c-col>
+            </c-row>
+            <c-row class="g-3">
+              <c-col [xs]>
+                <label cLabel for="user-firstname">First name</label>
+                <input
+                  id="user-firstname"
+                  aria-label="First name"
+                  cFormControl
+                  placeholder="First name"
+                  name="firstName"
+                  [(ngModel)]="userDto.firstName"
+                />
+              </c-col>
+              <c-col [xs]>
+                <label cLabel for="user-lastname">Last name</label>
+                <input
+                  id="user-lastname"
+                  aria-label="Last name"
+                  cFormControl
+                  placeholder="Last name"
+                  name="lastName"
+                  [(ngModel)]="userDto.lastName"
+                />
+              </c-col>
+            </c-row>
+          </c-tab-panel>
+          <c-tab-panel class="p-3" itemKey="roles">
+            <ul [flush]="true" cListGroup>
+              @for (role of allRoles; track $index) {
+              <li cListGroupItem>
+                <c-form-check>
+                  <input
+                    cFormCheckInput
+                    type="checkbox"
+                    [name]="role.role.name ?? 'role'"
+                    [id]="'role' + role.role.name"
+                    [(ngModel)]="role.selected"
+                  />
+                  <label cFormCheckLabel [for]="'role' + role.role.name">{{
+                    role.role.name
+                  }}</label>
+                  <div>
+                    <details>
+                      <summary>Permissions</summary>
+                      @for (perm of role.role.permissions; track $index) {
+                        <c-badge color="primary" shape="rounded-pill" class="me-1">{{perm}}</c-badge>
+                      }
+                    </details>
+                  </div>
+                </c-form-check>
+              </li>
+              }
+            </ul>
+          </c-tab-panel>
+          <c-tab-panel *ngIf="userDto.id" class="p-3" itemKey="audit">
+            <c-row class="g-3">
+             @if(userDto.createdUser){
+              <c-col [xs]>
+                <app-user-display-card
+                  [user]="userDto.createdUser"
+                  header="User created by:"
+                  footer="Creation time: {{userDto.creationTime | date: 'medium'}}"></app-user-display-card>
+              </c-col>
+             }
+             @if(!userDto.createdUser){
+              <c-col [xs]>
+                <c-alert color="light">Creation time: {{userDto.creationTime | date: 'medium'}}</c-alert>
+              </c-col>
+             }
+             @if(userDto.lastModifiedUser){
+              <c-col [xs]>
+                <app-user-display-card
+                  [user]="userDto.lastModifiedUser"
+                  header="User last modified by:"
+                  footer="Last modification time: {{userDto.lastModificationTime | date: 'medium'}}"></app-user-display-card>
+              </c-col>
+             }
+             @if(!userDto.lastModifiedUser){
+              <c-col [xs]>
+                <c-alert color="light">Last modification time: {{userDto.lastModificationTime | date: 'medium'}}</c-alert>
+              </c-col>
+             }
+            </c-row>
+          </c-tab-panel>
+        </c-tabs-content>
+      </c-tabs>
+    </c-modal-body>
+    <c-modal-footer>
+      <button
+        (click)="close()"
+        cButton
+        type="button"
+        color="secondary"
+      >
+        Close
+      </button>
+      <button cButton color="primary" type="submit">Save</button>
+    </c-modal-footer>
+  </form>
+</c-modal>

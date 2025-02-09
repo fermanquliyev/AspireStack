@@ -25,7 +25,7 @@ namespace AspireStack.Application.UserManagement
             this.userRoleRepository = unitOfWork.Repository<UserRole, string>();
             this.currentUser = currentUser;
         }
-
+        [AppServiceAuthorize(PermissionNames.Role_View)]
         public async Task<RoleDto> GetRoleAsync(Guid id)
         {
             var role = await roleRepository.GetAsync(r => r.Id == id);
@@ -37,7 +37,7 @@ namespace AspireStack.Application.UserManagement
                 Permissions = role.Permissions
             };
         }
-
+        [AppServiceAuthorize(PermissionNames.Role_View)]
         public async Task<List<RoleDto>> GetAllRolesAsync()
         {
             var roles = await roleRepository.GetListAsync(r => true);
@@ -49,7 +49,7 @@ namespace AspireStack.Application.UserManagement
                 Permissions = role.Permissions
             }).ToList();
         }
-
+        [AppServiceAuthorize(PermissionNames.Role_Create)]
         public async Task<RoleDto> CreateRoleAsync(RoleDto input)
         {
             var role = new Role
@@ -70,7 +70,7 @@ namespace AspireStack.Application.UserManagement
                 Permissions = role.Permissions
             };
         }
-
+        [AppServiceAuthorize(PermissionNames.Role_Update)]
         public async Task<RoleDto> UpdateRoleAsync(RoleDto input)
         {
             var role = await roleRepository.GetAsync(r => r.Id == input.Id);
@@ -83,7 +83,7 @@ namespace AspireStack.Application.UserManagement
             await roleRepository.UpdateAsync(role, true);
             return input;
         }
-
+        [AppServiceAuthorize(PermissionNames.Role_Delete)]
         public async Task DeleteRoleAsync(Guid id)
         {
             var userRoles = await userRoleRepository.GetListAsync(ur => ur.RoleId == id);

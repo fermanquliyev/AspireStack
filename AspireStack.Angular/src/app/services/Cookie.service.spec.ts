@@ -1,7 +1,7 @@
 /* tslint:disable:no-unused-variable */
 
 import { TestBed, inject } from '@angular/core/testing';
-import { CookieService } from './cookie.service';
+import { CookieService } from './Cookie.service';
 
 describe('Service: Cookie', () => {
   beforeEach(() => {

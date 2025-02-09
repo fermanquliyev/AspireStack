@@ -2,9 +2,7 @@
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
 using AspireStack.Domain.Shared.Enums;
-using AspireStack.Infrastructure.Jwt;
 using AspireStack.WebApi.DynamicRouteMapping;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +21,7 @@ namespace AspireStack.WebApi.Controllers
         private readonly ICurrentUser<Guid> currentUser = currentUser;
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<WebApiResult<string>>> Login([FromBody] LoginRequest request)
         {
             var user = await AuthenticateUser(request);
             if (user == null)
@@ -36,7 +34,7 @@ namespace AspireStack.WebApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<ActionResult<WebApiResult<Guid>>> Register([FromBody] RegisterRequest request)
         {
             var user = new User
             {
@@ -55,19 +53,22 @@ namespace AspireStack.WebApi.Controllers
 #if DEBUG
         [HttpPost("currentUser")]
         [Authorize]
-        public IActionResult CurrentUser()
+        public ActionResult<WebApiResult<object>> CurrentUser()
         {
             var currentUserId = currentUser.Id;
             var username = currentUser.Username;
             var email = currentUser.Email;
-            var data = new { Id = currentUserId, Username = username, Email = email };
+            var roles = currentUser.Roles;
+            var permissions = currentUser.Permissions;
+            var data = new { Id = currentUserId, Username = username, Email = email, Roles = roles, Permissions = permissions };
             return Ok(new WebApiResult { Data = data, StatusCode = 200, Success = true });
         }
 #endif
 
         private async Task<User?> AuthenticateUser(LoginRequest request)
         {
-            var user = await unitOfWork.Repository<User, Guid>().FindAsync(x => x.Email == request.Email);
+            var userQuery = unitOfWork.Repository<User, Guid>().WithInnerDetails(x => x.Roles, x=> x.Role).Where(x => x.Email == request.Email);
+            var user = await unitOfWork.AsyncQueryableExecuter.FirstOrDefaultAsync(userQuery);
             if (user is null)
             {
                 return null;

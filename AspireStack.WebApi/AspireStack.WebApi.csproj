@@ -1,26 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <InvariantGlobalization>true</InvariantGlobalization>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<InvariantGlobalization>true</InvariantGlobalization>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AspireStack.Infrastructure\AspireStack.Infrastructure.csproj" />
-    <ProjectReference Include="..\AspireStack.ServiceDefaults\AspireStack.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\AspireStack.Application\AspireStack.Application.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\AspireStack.Infrastructure\AspireStack.Infrastructure.csproj" />
+		<ProjectReference Include="..\AspireStack.ServiceDefaults\AspireStack.ServiceDefaults.csproj" />
+		<ProjectReference Include="..\AspireStack.Application\AspireStack.Application.csproj" />
+	</ItemGroup>
 
 </Project>

@@ -19,19 +19,23 @@ namespace AspireStack.Domain.Entities.UserManagement
         public Guid? LastModifierId { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime? DeletionTime { get; set; }
-        public List<Role> Roles { get; set; }
+        public List<UserRole> Roles { get; set; }
 
         public void AddRole(Role role)
         {
             if (Roles == null)
             {
-                Roles = new List<Role>();
+                Roles = new List<UserRole>();
             }
-            if (Roles.Any(r => r.Id == role.Id))
+            if (Roles.Any(r => r.RoleId == role.Id))
             {
                 return;
             }
-            Roles.Add(role);
+            Roles.Add(new UserRole
+            {
+                RoleId = role.Id,
+                UserId = Id
+            });
         }
 
         public void RemoveRole(Guid roleId)
@@ -40,7 +44,7 @@ namespace AspireStack.Domain.Entities.UserManagement
             {
                 return;
             }
-            Roles.RemoveAll(r => r.Id == roleId);
+            Roles.RemoveAll(r => r.RoleId == roleId);
         }
 
         public void Validate()

@@ -11,6 +11,8 @@ const authGuard: CanActivateFn = (
   if (currentUserService.getIsAuthenticated()) {
     return true;
   } else {
+    console.log('Not authenticated, redirecting to login');
+    console.log({...currentUserService})
     return inject(Router).createUrlTree(['/login']);
   }
 };
@@ -30,59 +32,64 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadChildren: () => import('./views/dashboard/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/dashboard/routes').then((m) => m.routes),
         //canActivate: [authGuard]
       },
       {
+        path: 'user-management',
+        loadChildren: () => import('./modules/user-management/routes').then((m) => m.routes),
+        canActivate: [authGuard]
+      },
+      {
         path: 'theme',
-        loadChildren: () => import('./views/theme/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/theme/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'base',
-        loadChildren: () => import('./views/base/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/base/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'buttons',
-        loadChildren: () => import('./views/buttons/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/buttons/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'forms',
-        loadChildren: () => import('./views/forms/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/forms/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'icons',
-        loadChildren: () => import('./views/icons/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/icons/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'notifications',
-        loadChildren: () => import('./views/notifications/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/notifications/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'widgets',
-        loadChildren: () => import('./views/widgets/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/widgets/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'charts',
-        loadChildren: () => import('./views/charts/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/charts/routes').then((m) => m.routes),
         canActivate: [authGuard]
       },
       {
         path: 'pages',
-        loadChildren: () => import('./views/pages/routes').then((m) => m.routes),
+        loadChildren: () => import('./modules/pages/routes').then((m) => m.routes),
         canActivate: [authGuard]
       }
     ]
   },
   {
     path: '404',
-    loadComponent: () => import('./views/pages/page404/page404.component').then(m => m.Page404Component),
+    loadComponent: () => import('./modules/pages/page404/page404.component').then(m => m.Page404Component),
     data: {
       title: 'Page 404',
       showInMenu: false
@@ -90,7 +97,7 @@ export const routes: Routes = [
   },
   {
     path: '500',
-    loadComponent: () => import('./views/pages/page500/page500.component').then(m => m.Page500Component),
+    loadComponent: () => import('./modules/pages/page500/page500.component').then(m => m.Page500Component),
     data: {
       title: 'Page 500',
       showInMenu: false
@@ -98,7 +105,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./views/pages/login/login.component').then(m => m.LoginComponent),
+    loadComponent: () => import('./modules/pages/login/login.component').then(m => m.LoginComponent),
     data: {
       title: 'Login Page',
       showInMenu: false
@@ -106,7 +113,7 @@ export const routes: Routes = [
   },
   {
     path: 'register',
-    loadComponent: () => import('./views/pages/register/register.component').then(m => m.RegisterComponent),
+    loadComponent: () => import('./modules/pages/register/register.component').then(m => m.RegisterComponent),
     data: {
       title: 'Register Page',
       showInMenu: false

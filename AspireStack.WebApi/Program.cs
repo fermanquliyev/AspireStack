@@ -1,11 +1,14 @@
 using AspireStack.Application;
+using AspireStack.Application.AppService;
 using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Domain.Services;
+using AspireStack.Domain.Shared.UserManagement;
 using AspireStack.Infrastructure;
 using AspireStack.WebApi.DynamicRouteMapping;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
@@ -36,29 +39,33 @@ internal class Program
             });
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
-            {
-                new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference
                     {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
                     }
-                },
-                new string[] {}
-            }
-                });
+            });
         });
 
         builder.Services.AddCors();
         builder.RegisterInfrastructureModule("AspireStackDb");
         var tokenParameters = builder.Configuration.GetSection("Jwt").Get<TokenParameters>();
         ArgumentNullException.ThrowIfNull(tokenParameters, "Jwt parameters are not set.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenParameters.Secret, "Jwt parameters are not set.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenParameters.Issuer, "Jwt parameters are not set.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenParameters.Audience, "Jwt parameters are not set.");
         builder.Services.AddOptions<TokenParameters>().Bind(builder.Configuration.GetSection("Jwt"));
         builder.Services.AddAuthorization(AddPolicies);
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>
             {
+                o.IncludeErrorDetails = true;
                 o.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
                 o.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -68,7 +75,13 @@ internal class Program
                     ClockSkew = TimeSpan.Zero
                 };
             });
-        builder.Services.AddControllers();
+        var mvcBuilder = builder.Services.AddControllers();
+        //mvcBuilder.PartManager.ApplicationParts.Add(new AssemblyPart(typeof(IAppService).Assembly));
+        //mvcBuilder.ConfigureApplicationPartManager(apm =>
+        //{
+        //    apm.FeatureProviders.Clear();
+        //    apm.FeatureProviders.Add(new AspireControllerFeatureProvider());
+        //});
         builder.Services.AddHttpContextAccessor();
         builder.Services.RegisterAppServices();
 
@@ -105,7 +118,7 @@ internal class Program
             authentication.AddPolicy(permission, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.RequireClaim(ClaimTypes.Actor, permission);
+                policy.RequireClaim(CustomClaimTypes.Permission, permission);
             });
         }
     }

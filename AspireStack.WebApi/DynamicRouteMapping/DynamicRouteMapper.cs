@@ -2,8 +2,11 @@ using AspireStack.Application.AppService;
 using AspireStack.Application.Security;
 using AspireStack.Domain.Repository;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text.Json;
 
 namespace AspireStack.WebApi.DynamicRouteMapping
@@ -30,6 +33,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 {
                     continue;
                 }
+
                 var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.DeclaringType == serviceType);
                 var serviceAuthAttribute = serviceType.GetCustomAttribute<AppServiceAuthorizeAttribute>();
                 var allowAnonymous = serviceAuthAttribute == null || serviceType.GetCustomAttribute<AppServiceAllowAnonymousAttribute>() != null;
@@ -77,6 +81,8 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             }
         }
 
+
+
         /// <summary>
         /// Determines the HTTP method based on the method name.
         /// </summary>
@@ -104,7 +110,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
 
         private static Delegate CreateEndpointDelegate(WebApplication app, Type serviceType, MethodInfo method)
         {
-            return async (HttpContext context) =>
+            var a = async (HttpContext context) =>
             {
                 using var scope = app.Services.CreateScope();
                 // Resolve the service from DI
@@ -117,6 +123,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 // Deserialize parameters from the HTTP request
                 var parameters = method.GetParameters();
                 var args = new List<object>();
+
 
                 foreach (var param in parameters)
                 {
@@ -133,6 +140,21 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                         {
                             PropertyNameCaseInsensitive = true
                         });
+                        // Validate the model
+                        var validationResults = new List<ValidationResult>();
+                        var validationContext = new ValidationContext(body);
+                        if (!Validator.TryValidateObject(body, validationContext, validationResults, true))
+                        {
+                            context.Response.StatusCode = 400;
+                            await context.Response.WriteAsJsonAsync(new WebApiResult<string[]>
+                            {
+                                Message = "Validation failed",
+                                StatusCode = 400,
+                                Success = false,
+                                Data = validationResults.Select(x=>$"{x.ErrorMessage}, Member names: {String.Join(",",x.MemberNames)}").ToArray()
+                            });
+                            return;
+                        }
                         args.Add(body!);
                     }
                 }
@@ -159,12 +181,8 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     await transaction.CommitAsync();
 
                     // Return response
-                    await context.Response.WriteAsJsonAsync(new WebApiResult
-                    {
-                        Data = result,
-                        StatusCode = 200,
-                        Success = true
-                    });
+                    context.Response.StatusCode = 200;
+                    await context.Response.WriteAsJsonAsync(result);
                 }
                 catch (Exception ex)
                 {
@@ -179,31 +197,35 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     });
                 }
             };
+            return a;
         }
 
         private static void AddQueryParamToMethodArgs(List<object> args, ParameterInfo param, string? value)
         {
             object? parsedValue = param.ParameterType switch
             {
-                Type t when t == typeof(Guid) || t == typeof(Guid?) => Guid.TryParse(value, out var guidValue) ? guidValue : (t == typeof(Guid?) ? (Guid?)null : Guid.Empty),
-                Type t when t == typeof(int) || t == typeof(int?) => int.TryParse(value, out var intValue) ? intValue : (t == typeof(int?) ? (int?)null : 0),
-                Type t when t == typeof(double) || t == typeof(double?) => double.TryParse(value, out var doubleValue) ? doubleValue : (t == typeof(double?) ? (double?)null : 0.0),
-                Type t when t == typeof(bool) || t == typeof(bool?) => bool.TryParse(value, out var boolValue) ? boolValue : (t == typeof(bool?) ? (bool?)null : false),
-                Type t when t == typeof(DateTime) || t == typeof(DateTime?) => DateTime.TryParse(value, out var dateTimeValue) ? dateTimeValue : (t == typeof(DateTime?) ? (DateTime?)null : DateTime.MinValue),
-                Type t when t == typeof(DateOnly) || t == typeof(DateOnly?) => DateOnly.TryParse(value, out var dateOnlyValue) ? dateOnlyValue : (t == typeof(DateOnly?) ? (DateOnly?)null : DateOnly.MinValue),
-                Type t when t == typeof(TimeSpan) || t == typeof(TimeSpan?) => TimeSpan.TryParse(value, out var timeSpanValue) ? timeSpanValue : (t == typeof(TimeSpan?) ? (TimeSpan?)null : TimeSpan.MinValue),
+                Type t when t == typeof(Guid) || t == typeof(Guid?) => Guid.TryParse(value?.Replace("\"",""), out var guidValue) ? guidValue : (t == typeof(Guid?) ? (Guid?)null : Guid.Empty),
+                Type t when t == typeof(int) || t == typeof(int?) => int.TryParse(value?.Replace("\"", ""), out var intValue) ? intValue : (t == typeof(int?) ? (int?)null : 0),
+                Type t when t == typeof(double) || t == typeof(double?) => double.TryParse(value?.Replace("\"", ""), out var doubleValue) ? doubleValue : (t == typeof(double?) ? (double?)null : 0.0),
+                Type t when t == typeof(bool) || t == typeof(bool?) => bool.TryParse(value?.Replace("\"", ""), out var boolValue) ? boolValue : (t == typeof(bool?) ? (bool?)null : false),
+                Type t when t == typeof(DateTime) || t == typeof(DateTime?) => DateTime.TryParse(value?.Replace("\"", ""), out var dateTimeValue) ? dateTimeValue : (t == typeof(DateTime?) ? (DateTime?)null : DateTime.MinValue),
+                Type t when t == typeof(DateOnly) || t == typeof(DateOnly?) => DateOnly.TryParse(value?.Replace("\"", ""), out var dateOnlyValue) ? dateOnlyValue : (t == typeof(DateOnly?) ? (DateOnly?)null : DateOnly.MinValue),
+                Type t when t == typeof(TimeSpan) || t == typeof(TimeSpan?) => TimeSpan.TryParse(value?.Replace("\"", ""), out var timeSpanValue) ? timeSpanValue : (t == typeof(TimeSpan?) ? (TimeSpan?)null : TimeSpan.MinValue),
+                Type t when t == typeof(float) || t == typeof(float?) => float.TryParse(value?.Replace("\"", ""), out var floatValue) ? floatValue : (t == typeof(float?) ? (float?)null : 0f),
+                Type t when t == typeof(long) || t == typeof(long?) => long.TryParse(value?.Replace("\"", ""), out var longValue) ? longValue : (t == typeof(long?) ? (long?)null : 0L),
+                Type t when t == typeof(short) || t == typeof(short?) => short.TryParse(value?.Replace("\"", ""), out var shortValue) ? shortValue : (t == typeof(short?) ? (short?)null : (short)0),
+                Type t when t == typeof(byte) || t == typeof(byte?) => byte.TryParse(value?.Replace("\"", ""), out var byteValue) ? byteValue : (t == typeof(byte?) ? (byte?)null : (byte)0),
+                Type t when t == typeof(char) || t == typeof(char?) => char.TryParse(value?.Replace("\"", ""), out var charValue) ? charValue : (t == typeof(char?) ? (char?)null : '\0'),
+                Type t when t == typeof(decimal) || t == typeof(decimal?) => decimal.TryParse(value?.Replace("\"", ""), out var decimalValue) ? decimalValue : (t == typeof(decimal?) ? (decimal?)null : 0m),
+                Type t when t == typeof(uint) || t == typeof(uint?) => uint.TryParse(value?.Replace("\"", ""), out var uintValue) ? uintValue : (t == typeof(uint?) ? (uint?)null : 0u),
+                Type t when t == typeof(ulong) || t == typeof(ulong?) => ulong.TryParse(value?.Replace("\"", ""), out var ulongValue) ? ulongValue : (t == typeof(ulong?) ? (ulong?)null : 0ul),
+                Type t when t == typeof(ushort) || t == typeof(ushort?) => ushort.TryParse(value?.Replace("\"", ""), out var ushortValue) ? ushortValue : (t == typeof(ushort?) ? (ushort?)null : (ushort)0),
+                Type t when t == typeof(sbyte) || t == typeof(sbyte?) => sbyte.TryParse(value?.Replace("\"", ""), out var sbyteValue) ? sbyteValue : (t == typeof(sbyte?) ? (sbyte?)null : (sbyte)0),
                 Type t when t == typeof(string) => value ?? string.Empty,
-                Type t when t == typeof(float) || t == typeof(float?) => float.TryParse(value, out var floatValue) ? floatValue : (t == typeof(float?) ? (float?)null : 0f),
-                Type t when t == typeof(long) || t == typeof(long?) => long.TryParse(value, out var longValue) ? longValue : (t == typeof(long?) ? (long?)null : 0L),
-                Type t when t == typeof(short) || t == typeof(short?) => short.TryParse(value, out var shortValue) ? shortValue : (t == typeof(short?) ? (short?)null : (short)0),
-                Type t when t == typeof(byte) || t == typeof(byte?) => byte.TryParse(value, out var byteValue) ? byteValue : (t == typeof(byte?) ? (byte?)null : (byte)0),
-                Type t when t == typeof(char) || t == typeof(char?) => char.TryParse(value, out var charValue) ? charValue : (t == typeof(char?) ? (char?)null : '\0'),
-                Type t when t == typeof(decimal) || t == typeof(decimal?) => decimal.TryParse(value, out var decimalValue) ? decimalValue : (t == typeof(decimal?) ? (decimal?)null : 0m),
-                Type t when t == typeof(uint) || t == typeof(uint?) => uint.TryParse(value, out var uintValue) ? uintValue : (t == typeof(uint?) ? (uint?)null : 0u),
-                Type t when t == typeof(ulong) || t == typeof(ulong?) => ulong.TryParse(value, out var ulongValue) ? ulongValue : (t == typeof(ulong?) ? (ulong?)null : 0ul),
-                Type t when t == typeof(ushort) || t == typeof(ushort?) => ushort.TryParse(value, out var ushortValue) ? ushortValue : (t == typeof(ushort?) ? (ushort?)null : (ushort)0),
-                Type t when t == typeof(sbyte) || t == typeof(sbyte?) => sbyte.TryParse(value, out var sbyteValue) ? sbyteValue : (t == typeof(sbyte?) ? (sbyte?)null : (sbyte)0),
-                _ => Convert.ChangeType(value, param.ParameterType)
+                _ => JsonSerializer.Deserialize(value ?? "{}", param.ParameterType, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                })
             };
 
             args.Add(parsedValue);

@@ -22,7 +22,7 @@ namespace AspireStack.Domain.Entities.UserManagement
         public bool IsDeleted { get; set; }
         public DateTime? DeletionTime { get; set; }
 
-        public List<User> Users { get; set; }
+        public List<UserRole> Users { get; set; }
 
         public void Validate()
         {

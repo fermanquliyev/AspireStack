@@ -14,6 +14,7 @@ import { DropdownModule, SidebarModule } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { routes } from './app.routes';
 import { AuthInterceptorService } from './interceptors/AuthInterceptor.service';
+import { API_BASE_URL } from './services/api-services/api-service-proxies';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,6 +36,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(SidebarModule, DropdownModule),
     IconSetService,
     provideAnimations(),
-    {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true}
+    {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true},
+    {provide: API_BASE_URL, useValue: '/api'},
   ],
 };

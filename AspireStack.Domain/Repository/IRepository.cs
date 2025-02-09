@@ -77,9 +77,7 @@ namespace AspireStack.Domain.Repository
             CancellationToken cancellationToken = default
         );
 
-        Task<IQueryable<TEntity>> WithDetailsAsync(); //TODO: CancellationToken
-
-        Task<IQueryable<TEntity>> WithDetailsAsync(params Expression<Func<TEntity, object>>[] propertySelectors); //TODO: CancellationToken
+        IQueryable<TEntity> WithDetails(params Expression<Func<TEntity, object>>[] propertySelectors);
 
         IQueryable<TEntity> GetQueryable(); //TODO: CancellationToken
 
@@ -207,6 +205,8 @@ namespace AspireStack.Domain.Repository
         /// <param name="cancellationToken">A <see cref="T:System.Threading.CancellationToken" /> to observe while waiting for the task to complete.</param>
         /// <returns>Awaitable count of how many rows are deleted if autosave set true. <see cref="Task"/>.</returns>
         Task<int> BulkUpdateAsync<TProperty>([NotNull] Func<TEntity, bool> entitySelector, [NotNull] Func<TEntity, TProperty> propertyExpression, TProperty setValue, bool autoSave = false, CancellationToken cancellationToken = default);
+        IQueryable<TEntity> WithInnerDetails<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertySelector, Expression<Func<TProperty, object>> innerPropertySelector);
+        IQueryable<TEntity> WithInnerDetails<TProperty>(Expression<Func<TEntity, TProperty>> propertySelector, Expression<Func<TProperty, object>> innerPropertySelector);
     }
 
 }

@@ -1,0 +1,12 @@
+<c-card>
+  <c-card-header>{{ header }}</c-card-header>
+  <ul cListGroup [flush]="true">
+    <li cListGroupItem>Username: {{ user.username }}</li>
+    <li cListGroupItem>Email: {{ user.email }}</li>
+    <li cListGroupItem>First name: {{ user.firstName }}</li>
+    <li cListGroupItem>Last name: {{ user.lastName }}</li>
+    <li cListGroupItem>Phone number: {{ user.phoneNumber }}</li>
+    <li cListGroupItem>Id: {{ user.id }}</li>
+  </ul>
+  <c-card-footer>{{ footer }}</c-card-footer>
+</c-card>

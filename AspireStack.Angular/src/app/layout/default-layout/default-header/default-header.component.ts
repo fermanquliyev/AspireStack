@@ -23,8 +23,8 @@ import {
 } from '@coreui/angular';
 
 import { IconDirective } from '@coreui/icons-angular';
-import { AuthService } from 'src/app/services/auth-service.service';
-import { CurrentUserService } from 'src/app/services/current-user.service';
+import { AuthService } from '../../../services/auth-service.service';
+import { CurrentUserService } from '../../../services/current-user.service';
 
 @Component({
     selector: 'app-default-header',

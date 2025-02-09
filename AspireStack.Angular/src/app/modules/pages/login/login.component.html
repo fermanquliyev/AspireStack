@@ -5,7 +5,7 @@
         <c-card-group>
           <c-card class="p-4">
             <c-card-body>
-              <form cForm>
+              <form cForm (ngSubmit)="login()">
                 <h1>Login</h1>
                 <p class="text-body-secondary">Sign In to your account</p>
                 <c-input-group class="mb-3">
@@ -29,12 +29,12 @@
                 </c-input-group>
                 <c-row>
                   <c-col xs="6">
-                    <button cButton class="px-4" color="primary" (click)="login()">
+                    <button cButton class="px-4" color="primary" type="submit">
                       Login
                     </button>
                   </c-col>
                   <c-col class="text-right" xs="6">
-                    <button cButton class="px-0" color="link">
+                    <button cButton class="px-0" color="link" type="button">
                       Forgot password?
                     </button>
                   </c-col>

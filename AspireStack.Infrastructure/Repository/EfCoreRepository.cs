@@ -158,19 +158,28 @@ namespace AspireStack.Infrastructure.Repository
             }
         }
 
-        public async Task<IQueryable<TEntity>> WithDetailsAsync()
-        {
-            return await Task.FromResult(dbContext.Set<TEntity>().AsQueryable());
-        }
-
-        public async Task<IQueryable<TEntity>> WithDetailsAsync(params Expression<Func<TEntity, object>>[] propertySelectors)
+        public IQueryable<TEntity> WithDetails(params Expression<Func<TEntity, object>>[] propertySelectors)
         {
             var query = dbContext.Set<TEntity>().AsQueryable();
             foreach (var propertySelector in propertySelectors)
             {
                 query = query.Include(propertySelector);
             }
-            return await Task.FromResult(query);
+            return query;
+        }
+
+        public IQueryable<TEntity> WithInnerDetails<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertySelector, Expression<Func<TProperty, object>> innerPropertySelector)
+        {
+            var query = dbContext.Set<TEntity>().AsQueryable();
+            query = query.Include(propertySelector).ThenInclude(innerPropertySelector);
+            return query;
+        }
+
+        public IQueryable<TEntity> WithInnerDetails<TProperty>(Expression<Func<TEntity, TProperty>> propertySelector, Expression<Func<TProperty, object>> innerPropertySelector)
+        {
+            var query = dbContext.Set<TEntity>().AsQueryable();
+            query = query.Include(propertySelector).ThenInclude(innerPropertySelector);
+            return query;
         }
     }
 }

@@ -1,6 +1,7 @@
 using AspireStack.Domain.Entities;
 using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Infrastructure.EntityFrameworkCore;
+using AspireStack.Infrastructure.Jwt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,24 +11,36 @@ namespace AspireStack.Infrastructure
     {
         public static bool AddAdminUser(this AspireStackDbContext dbContext, string username, string password)
         {
-            var passwordHasher = new PasswordHasher<User>();
-            var dbUser = dbContext.Users.FirstOrDefault(u => u.Username == username);
-            if (dbUser != null)
+            var passwordHasher = new AspirePasswordHasher<User>(new PasswordHasher<User>());
+            var adminRole = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
+            if (adminRole == null)
+            {
+                adminRole = new Role
+                {
+                    Name = "Admin",
+                    Description = "Admin role",
+                    Permissions = [.. PermissionNames.Permissions]
+                };
+                dbContext.Roles.Add(adminRole);
+                dbContext.SaveChanges();
+            }
+            var adminUser = dbContext.Users.FirstOrDefault(u => u.Username == username);
+            if (adminUser != null)
             {
                 return false;
             }
-            dbUser = new User
+            adminUser = new User
             {
-                Id = Guid.NewGuid(),
                 FirstName = "Admin",
                 LastName = "User",
-                Email = $"{username}@aspirestack.com",
+                Email = $"{username}@gmail.com",
                 EmailVerified = true,
                 Username = username
             };
-            dbContext.Users.Add(dbUser);
-            var passwordHash = passwordHasher.HashPassword(dbUser, password);
-            dbUser.PasswordHashed = passwordHash;
+            dbContext.Users.Add(adminUser);
+            adminUser.AddRole(adminRole);
+            var passwordHash = passwordHasher.HashPassword(adminUser, password);
+            adminUser.PasswordHashed = passwordHash;
             dbContext.SaveChanges();
             return true;
         }

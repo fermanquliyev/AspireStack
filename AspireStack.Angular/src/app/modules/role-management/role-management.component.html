@@ -2,26 +2,12 @@
   <c-col xs="12">
     <c-card class="mb-4">
       <c-card-header>
-        <strong>Users</strong>
+        <strong>Role</strong>
         <br />
-        <small>User Management Table</small>
+        <small>Role Management Table</small>
       </c-card-header>
       <c-card-body>
         <div class="mb-3 p-3 d-flex justify-content-between">
-         <div class="d-flex justify-content-between">
-          <div class="me-4">
-            <input
-              id="filter"
-              aria-label="filter"
-              cFormControl
-              placeholder="Filter"
-              name="filter"
-              [(ngModel)]="filter"
-            />
-          </div>
-          <button color="info" class="text-white me-4" (click)="getUsers()" cButton>
-            Search
-          </button>
           <div>
             <label for="pageSize">Items per page:</label>
             <select
@@ -34,10 +20,8 @@
               <option value="50">50</option>
             </select>
           </div>
-          
-         </div>
-          <button color="primary" (click)="createEditUserModal.open()" cButton>
-            Add User
+          <button color="primary" (click)="createEditRoleModal.open()" cButton>
+            Create Role
           </button>
         </div>
         <table cTable class="table table-striped">
@@ -45,9 +29,7 @@
             <tr>
               <th scope="col">Id</th>
               <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Username</th>
-              <th scope="col">Phone</th>
+              <th scope="col">Description</th>
               <th scope="col">Creation time</th>
               <th scope="col">Actions</th>
             </tr>
@@ -55,21 +37,21 @@
           <tbody>
             <tr
               *ngFor="
-                let user of users.items;
+                let role of roles.items;
                 let i = index;
-                trackBy: trackByUserId
+                trackBy: trackByRoleId
               "
             >
-              <th scope="row" [title]="user.id">...{{ user.id?.slice(-4) }}</th>
-              <td>{{ user.firstName }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.username }}</td>
-              <td>{{ user.phoneNumber }}</td>
-              <td>{{ user.creationTime | date : "medium" }}</td>
+              <th scope="row" [title]="role.id">
+                ...{{ role.id?.slice(-4) }}
+              </th>
+              <td>{{ role.name }}</td>
+              <td>{{ role.description }}</td>
+              <td>{{ role.creationTime | date: 'medium' }}</td>
               <td>
                 <button
                   class="btn btn-sm btn-info text-white"
-                  (click)="createEditUserModal.open(user.id)"
+                  (click)="createEditRoleModal.open(role.id)"
                 >
                   Edit
                 </button>
@@ -81,8 +63,8 @@
         <div class="d-flex justify-content-between">
           <div>
             Showing {{ (page - 1) * pageSize + 1 }} to
-            {{ (page - 1) * pageSize + (users.items?.length ?? 0) }} of
-            {{ users.totalCount }} entries
+            {{ (page - 1) * pageSize + (roles.items?.length ?? 0) }} of
+            {{ roles.totalCount }} entries
           </div>
           <nav aria-label="Page navigation example">
             <ul class="pagination">
@@ -116,7 +98,7 @@
   </c-col>
 </c-row>
 
-<app-create-edit-user-modal
-  #createEditUserModal
-  (onUserCreated)="getUsers()"
-></app-create-edit-user-modal>
+<app-create-edit-role-modal
+  #createEditRoleModal
+  (onRoleCreated)="getRoles()"
+></app-create-edit-role-modal>

@@ -120,6 +120,16 @@ namespace AspireStack.Infrastructure.Repository
             return dbContext.Set<TEntity>().AsQueryable();
         }
 
+        public IQueryable<TEntity> GetQueryableAsNoTracking()
+        {
+            return dbContext.Set<TEntity>().AsNoTracking();
+        }
+
+        public IQueryable<TEntity> GetQueryableAsNoTrackingWithIdentityResolution()
+        {
+            return dbContext.Set<TEntity>().AsNoTrackingWithIdentityResolution();
+        }
+
         public async Task<TEntity> InsertAsync([NotNull] TEntity entity, bool autoSave = false, CancellationToken cancellationToken = default)
         {
             await dbContext.Set<TEntity>().AddAsync(entity, cancellationToken);

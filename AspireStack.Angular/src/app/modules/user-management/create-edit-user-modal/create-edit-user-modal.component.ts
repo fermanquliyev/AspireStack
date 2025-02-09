@@ -6,8 +6,8 @@ import {
   CreateEditUserDto,
   RoleDto,
 } from 'src/app/services/api-services/api-service-proxies';
-import { UserDisplayCardComponent } from '../user-display-card/user-display-card.component';
 import { DatePipe, NgIf } from '@angular/common';
+import { UserDisplayCardComponent } from '../../shared/user-display-card/user-display-card.component';
 
 @Component({
   selector: 'app-create-edit-user-modal',

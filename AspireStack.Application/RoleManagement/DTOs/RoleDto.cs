@@ -8,6 +8,9 @@ namespace AspireStack.Application.RoleManagement.DTOs
         public string Name { get; set; }
         public string Description { get; set; }
         public string[] Permissions { get; set; }
+        public DateTime CreationTime { get; internal set; }
+        public DateTime? LastModificationTime { get; internal set; }
+
         public static RoleDto FromRole(Role role)
         {
             return new RoleDto

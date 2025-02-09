@@ -13,12 +13,12 @@ namespace AspireStack.Application.AppService.DTOs
             
         }
 
-        public PagedResult(IList<T> items, int totalCount)
+        public PagedResult(IList<T> items, long totalCount)
         {
             Items = items;
             TotalCount = totalCount;
         }
         public IList<T> Items { get; set; }
-        public int TotalCount { get; set; }
+        public long TotalCount { get; set; }
     }
 }

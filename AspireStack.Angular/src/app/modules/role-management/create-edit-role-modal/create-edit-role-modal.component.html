@@ -1,0 +1,95 @@
+<c-modal
+  #createEditRoleModal
+  backdrop="static"
+  size="lg"
+  id="create-edit-role-modal"
+>
+  <form cForm #createEditRoleForm="ngForm" (ngSubmit)="save()">
+    <c-modal-header>
+      <h5 cModalTitle>Role</h5>
+      <button [cModalToggle]="createEditRoleModal.id" cButtonClose></button>
+    </c-modal-header>
+    <c-modal-body>
+      <c-tabs [activeItemKey]="'role'">
+        <c-tabs-list variant="tabs">
+          <button cTab itemKey="role">Role</button>
+          <button cTab itemKey="permissions">Permission</button>
+          <button *ngIf="roleDto.id" cTab itemKey="audit">Audit</button>
+        </c-tabs-list>
+        <c-tabs-content>
+          <c-tab-panel class="p-3" itemKey="role">
+            <c-row class="g-3">
+              <c-col [xs]>
+                <label cLabel for="username">Role Name</label>
+                <input
+                  id="rolename"
+                  aria-label="role name"
+                  cFormControl
+                  placeholder="Role name"
+                  name="rolename"
+                  [(ngModel)]="roleDto.name"
+                />
+              </c-col>
+              <c-col [xs]>
+                <label cLabel for="role-desc">Description</label>
+                <input
+                  aria-label="Description"
+                  id="Description"
+                  cFormControl
+                  placeholder="Description"
+                  name="Description"
+                  [(ngModel)]="roleDto.description"
+                />
+              </c-col>
+            </c-row>
+          </c-tab-panel>
+          <c-tab-panel class="p-3" itemKey="permissions">
+           <div>
+            <ul [flush]="true" cListGroup>
+              @for (perm of permissions; track $index) {
+              <li cListGroupItem>
+                <c-form-check>
+                  <input
+                    cFormCheckInput
+                    type="checkbox"
+                    [name]="perm ?? 'role'"
+                    [id]="'perm' + perm"
+                    [(ngModel)]="allPermissions[perm]"
+                  />
+                  <label cFormCheckLabel [for]="'perm' + perm">{{
+                    perm
+                  }}</label>
+                </c-form-check>
+              </li>
+              }
+            </ul>
+           </div>
+          </c-tab-panel>
+          <c-tab-panel *ngIf="roleDto.id" class="p-3" itemKey="audit">
+            <c-row class="g-3">
+              <c-col [xs]>
+                <c-alert color="light"
+                  >Creation time:
+                  {{ roleDto.creationTime | date : "medium" }}</c-alert
+                >
+              </c-col>
+
+              <c-col [xs]>
+                <c-alert color="light"
+                  >Last modification time:
+                  {{ roleDto.lastModificationTime | date : "medium" }}</c-alert
+                >
+              </c-col>
+            </c-row>
+          </c-tab-panel>
+        </c-tabs-content>
+      </c-tabs>
+    </c-modal-body>
+    <c-modal-footer>
+      <button (click)="close()" cButton type="button" color="secondary">
+        Close
+      </button>
+      <button cButton color="primary" type="submit">Save</button>
+    </c-modal-footer>
+  </form>
+</c-modal>

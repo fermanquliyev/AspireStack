@@ -41,6 +41,11 @@ export const routes: Routes = [
         canActivate: [authGuard]
       },
       {
+        path: 'role-management',
+        loadChildren: () => import('./modules/role-management/routes').then((m) => m.routes),
+        canActivate: [authGuard]
+      },
+      {
         path: 'theme',
         loadChildren: () => import('./modules/theme/routes').then((m) => m.routes),
         canActivate: [authGuard]

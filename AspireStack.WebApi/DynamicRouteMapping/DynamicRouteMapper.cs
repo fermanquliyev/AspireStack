@@ -1,6 +1,7 @@
 using AspireStack.Application.AppService;
 using AspireStack.Application.Security;
 using AspireStack.Domain.Repository;
+using AspireStack.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             // Scan for all services implementing IAppService
             var appServiceTypes = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .Where(t => typeof(IAppService).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+                .Where(t => typeof(AspireAppService).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
 
             foreach (var serviceType in appServiceTypes)
             {
@@ -114,11 +115,22 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             {
                 using var scope = app.Services.CreateScope();
                 // Resolve the service from DI
-                var service = scope.ServiceProvider.GetRequiredService(serviceType);
+                var service = scope.ServiceProvider.GetRequiredService(serviceType) as AspireAppService;
                 var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger(serviceType);
                 var dbcontext = scope.ServiceProvider.GetRequiredService<DbContext>();
                 var unitOFWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
+
+                if(service is null)
+                {
+                    throw new InvalidOperationException($"Service {serviceType.Name} not found in DI container");
+                }
+
+                service.CurrentUser = currentUser;
+                service.UnitOfWork = unitOFWork;
+                service.AsyncExecuter = unitOFWork.AsyncQueryableExecuter;
+                service.Init();
 
                 // Deserialize parameters from the HTTP request
                 var parameters = method.GetParameters();

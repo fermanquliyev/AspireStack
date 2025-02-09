@@ -79,7 +79,7 @@ namespace AspireStack.Domain.Repository
 
         IQueryable<TEntity> WithDetails(params Expression<Func<TEntity, object>>[] propertySelectors);
 
-        IQueryable<TEntity> GetQueryable(); //TODO: CancellationToken
+        IQueryable<TEntity> GetQueryable();
 
         /// <summary>
         /// Gets a list of entities by the given <paramref name="predicate"/>.
@@ -207,6 +207,8 @@ namespace AspireStack.Domain.Repository
         Task<int> BulkUpdateAsync<TProperty>([NotNull] Func<TEntity, bool> entitySelector, [NotNull] Func<TEntity, TProperty> propertyExpression, TProperty setValue, bool autoSave = false, CancellationToken cancellationToken = default);
         IQueryable<TEntity> WithInnerDetails<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertySelector, Expression<Func<TProperty, object>> innerPropertySelector);
         IQueryable<TEntity> WithInnerDetails<TProperty>(Expression<Func<TEntity, TProperty>> propertySelector, Expression<Func<TProperty, object>> innerPropertySelector);
+        IQueryable<TEntity> GetQueryableAsNoTracking();
+        IQueryable<TEntity> GetQueryableAsNoTrackingWithIdentityResolution();
     }
 
 }

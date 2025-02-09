@@ -13,8 +13,8 @@ namespace AspireStack.Application
         public static void RegisterAppServices(this IServiceCollection services)
         {
             // Register app services here
-            var appServiceTypes = typeof(IAppService).Assembly.GetTypes()
-                    .Where(t => typeof(IAppService).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+            var appServiceTypes = typeof(AspireAppService).Assembly.GetTypes()
+                    .Where(t => typeof(AspireAppService).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
             foreach (var appServiceType in appServiceTypes)
             {
                 services.AddScoped(appServiceType);

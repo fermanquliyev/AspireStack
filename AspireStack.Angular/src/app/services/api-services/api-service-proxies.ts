@@ -33,11 +33,19 @@ export interface IApiService {
     /**
      * @return OkResult
      */
+    init(): Observable<void>;
+    /**
+     * @return OkResult
+     */
     getRole(id: string): Observable<RoleDto>;
     /**
      * @return OkResult
      */
     getAllRoles(): Observable<RoleDto[]>;
+    /**
+     * @return OkResult
+     */
+    getAllRolesPaged(pagedResultRequest: PagedResultRequest): Observable<RoleDtoPagedResult>;
     /**
      * @param body (optional) 
      * @return OkResult
@@ -271,6 +279,74 @@ export class ApiService implements IApiService {
     /**
      * @return OkResult
      */
+    init(): Observable<void> {
+        let url_ = this.baseUrl + "/Role/Init";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processInit(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processInit(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processInit(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = StringArrayWebApiResult.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 500) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result500: any = null;
+            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result500 = StringWebApiResult.fromJS(resultData500);
+            return throwException("Internal Server Error", status, _responseText, _headers, result500);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = StringWebApiResult.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OkResult
+     */
     getRole(id: string): Observable<RoleDto> {
         let url_ = this.baseUrl + "/Role/GetRole?";
         if (id === undefined || id === null)
@@ -392,6 +468,82 @@ export class ApiService implements IApiService {
             else {
                 result200 = <any>null;
             }
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = StringArrayWebApiResult.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 500) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result500: any = null;
+            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result500 = StringWebApiResult.fromJS(resultData500);
+            return throwException("Internal Server Error", status, _responseText, _headers, result500);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = StringWebApiResult.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OkResult
+     */
+    getAllRolesPaged(pagedResultRequest: PagedResultRequest): Observable<RoleDtoPagedResult> {
+        let url_ = this.baseUrl + "/Role/GetAllRolesPaged?";
+        if (pagedResultRequest === undefined || pagedResultRequest === null)
+            throw new Error("The parameter 'pagedResultRequest' must be defined and cannot be null.");
+        else
+            url_ += "pagedResultRequest=" + encodeURIComponent("" + JSON.stringify(pagedResultRequest)) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetAllRolesPaged(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetAllRolesPaged(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<RoleDtoPagedResult>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<RoleDtoPagedResult>;
+        }));
+    }
+
+    protected processGetAllRolesPaged(response: HttpResponseBase): Observable<RoleDtoPagedResult> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = RoleDtoPagedResult.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status === 400) {
@@ -1519,6 +1671,46 @@ export interface IObjectWebApiResult {
     statusCode?: number;
 }
 
+export class PagedResultRequest implements IPagedResultRequest {
+    page?: number;
+    pageSize?: number;
+
+    constructor(data?: IPagedResultRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.page = _data["page"];
+            this.pageSize = _data["pageSize"];
+        }
+    }
+
+    static fromJS(data: any): PagedResultRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new PagedResultRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["page"] = this.page;
+        data["pageSize"] = this.pageSize;
+        return data;
+    }
+}
+
+export interface IPagedResultRequest {
+    page?: number;
+    pageSize?: number;
+}
+
 export class RegisterRequest implements IRegisterRequest {
     email!: string | undefined;
     password!: string | undefined;
@@ -1564,6 +1756,8 @@ export class RoleDto implements IRoleDto {
     name?: string | undefined;
     description?: string | undefined;
     permissions?: string[] | undefined;
+    readonly creationTime?: Date;
+    readonly lastModificationTime?: Date | undefined;
 
     constructor(data?: IRoleDto) {
         if (data) {
@@ -1584,6 +1778,8 @@ export class RoleDto implements IRoleDto {
                 for (let item of _data["permissions"])
                     this.permissions!.push(item);
             }
+            (<any>this).creationTime = _data["creationTime"] ? new Date(_data["creationTime"].toString()) : <any>undefined;
+            (<any>this).lastModificationTime = _data["lastModificationTime"] ? new Date(_data["lastModificationTime"].toString()) : <any>undefined;
         }
     }
 
@@ -1604,6 +1800,8 @@ export class RoleDto implements IRoleDto {
             for (let item of this.permissions)
                 data["permissions"].push(item);
         }
+        data["creationTime"] = this.creationTime ? this.creationTime.toISOString() : <any>undefined;
+        data["lastModificationTime"] = this.lastModificationTime ? this.lastModificationTime.toISOString() : <any>undefined;
         return data;
     }
 }
@@ -1613,6 +1811,56 @@ export interface IRoleDto {
     name?: string | undefined;
     description?: string | undefined;
     permissions?: string[] | undefined;
+    creationTime?: Date;
+    lastModificationTime?: Date | undefined;
+}
+
+export class RoleDtoPagedResult implements IRoleDtoPagedResult {
+    items?: RoleDto[] | undefined;
+    totalCount?: number;
+
+    constructor(data?: IRoleDtoPagedResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(RoleDto.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+        }
+    }
+
+    static fromJS(data: any): RoleDtoPagedResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new RoleDtoPagedResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item.toJSON());
+        }
+        data["totalCount"] = this.totalCount;
+        return data;
+    }
+}
+
+export interface IRoleDtoPagedResult {
+    items?: RoleDto[] | undefined;
+    totalCount?: number;
 }
 
 export class StringArrayWebApiResult implements IStringArrayWebApiResult {

@@ -11,36 +11,27 @@ using System.ComponentModel.DataAnnotations;
 namespace AspireStack.Application.UserManagement
 {
     [AppServiceAuthorize]
-    public class UsersAppService : IAppService
+    public class UsersAppService : AspireAppService
     {
-        private readonly IUnitOfWork unitOfWork;
-        private readonly IRepository<User, Guid> userRepository;
-        private readonly IRepository<Role, Guid> roleRepository;
-        private readonly IRepository<UserRole, string> userRoleRepository;
-        private readonly ICurrentUser currentUser;
         private readonly IUserPasswordHasher<User> userPasswordHasher;
 
-        public UsersAppService(IUnitOfWork unitOfWork, ICurrentUser currentUser, IUserPasswordHasher<User> userPasswordHasher)
+        public UsersAppService(
+            IUserPasswordHasher<User> userPasswordHasher)
         {
-            this.unitOfWork = unitOfWork;
-            this.userRepository = unitOfWork.Repository<User, Guid>();
-            this.roleRepository = unitOfWork.Repository<Role, Guid>();
-            this.userRoleRepository = unitOfWork.Repository<UserRole, string>();
-            this.currentUser = currentUser;
             this.userPasswordHasher = userPasswordHasher;
         }
 
         [AppServiceAuthorize(PermissionNames.User_View)]
         public async Task<PagedResult<UserDto>> GetUsersAsync(GetUsersInput usersInput)
         {
-            var query = userRepository.GetQueryable();
+            var query = UnitOfWork.Repository<User, Guid>().GetQueryable();
             if (!string.IsNullOrEmpty(usersInput.Filter))
             {
                 query = query.Where(u => u.FirstName.Contains(usersInput.Filter) || u.LastName.Contains(usersInput.Filter) || u.Email.Contains(usersInput.Filter));
             }
-            var totalCount = await unitOfWork.AsyncQueryableExecuter.CountAsync(query);
+            var totalCount = await AsyncExecuter.CountAsync(query);
             query = query.OrderBy(u => u.Id).Skip((usersInput.Page-1)*usersInput.PageSize).Take(usersInput.PageSize);
-            var items = await unitOfWork.AsyncQueryableExecuter.ToListAsync(query.Select(UserDto.FromUser));
+            var items = await AsyncExecuter.ToListAsync(query.Select(UserDto.FromUser));
 
             return new PagedResult<UserDto>(items, totalCount);
         }
@@ -48,8 +39,8 @@ namespace AspireStack.Application.UserManagement
         [AppServiceAuthorize(PermissionNames.User_View)]
         public async Task<CreateEditUserDto> GetUserByIdAsync(Guid id)
         {
-            var userQuery = unitOfWork.Repository<User, Guid>().WithDetails(x => x.Roles).Where(x => x.Id == id);
-            var user = await unitOfWork.AsyncQueryableExecuter.FirstOrDefaultAsync(userQuery);
+            var userQuery = UnitOfWork.Repository<User, Guid>().WithDetails(x => x.Roles).Where(x => x.Id == id);
+            var user = await AsyncExecuter.FirstOrDefaultAsync(userQuery);
             if (user == null)
             {
                 throw new ApplicationException("User not found.");
@@ -58,14 +49,14 @@ namespace AspireStack.Application.UserManagement
 
             if(user.CreatorId.HasValue && user.CreatorId != Guid.Empty)
             {
-                var creator = await userRepository.FindAsync(u => u.Id == user.CreatorId);
+                var creator = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == user.CreatorId);
                 if (creator != null)
                 resultDto.CreatedUser = UserDto.FromUser(creator);
             }
 
             if (user.LastModifierId.HasValue && user.LastModifierId != Guid.Empty)
             {
-                var lastModifier = await userRepository.FindAsync(u => u.Id == user.LastModifierId);
+                var lastModifier = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == user.LastModifierId);
                 if (lastModifier != null)
                     resultDto.LastModifiedUser = UserDto.FromUser(lastModifier);
             }
@@ -84,7 +75,7 @@ namespace AspireStack.Application.UserManagement
                 Email = input.Email,
                 PhoneNumber = input.PhoneNumber
             };
-            await userRepository.InsertAsync(user);
+            await UnitOfWork.Repository<User, Guid>().InsertAsync(user);
             var randomPassword = GenerateRandomPassword();
             var passwordHash = userPasswordHasher.HashPassword(user, randomPassword);
             user.PasswordHashed = passwordHash;
@@ -93,7 +84,7 @@ namespace AspireStack.Application.UserManagement
             {
                 foreach (var roleId in input.RoleIds)
                 {
-                    var role = await roleRepository.FindAsync(r => r.Id == roleId);
+                    var role = await UnitOfWork.Repository<Role, Guid>().FindAsync(r => r.Id == roleId);
                     if (role != null)
                     {
                         user.AddRole(role);
@@ -101,13 +92,13 @@ namespace AspireStack.Application.UserManagement
                 }
             }
 
-            await unitOfWork.SaveChangesAsync();
+            await UnitOfWork.SaveChangesAsync();
         }
 
         [AppServiceAuthorize(PermissionNames.User_Update)]
         public async Task UpdateUserAsync(CreateEditUserDto input)
         {
-            var user = await userRepository.FindAsync(u => u.Id == input.Id);
+            var user = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == input.Id);
             if (user != null)
             {
                 user.Username = input.Username;
@@ -116,7 +107,7 @@ namespace AspireStack.Application.UserManagement
                 user.PhoneNumber = input.PhoneNumber;
                 // Email cannot be updated.
 
-                var existingUserRoles = await userRoleRepository.GetListAsync(ur => ur.UserId == user.Id);
+                var existingUserRoles = await UnitOfWork.Repository<UserRole, string>().GetListAsync(ur => ur.UserId == user.Id);
                 var existingRoleIds = existingUserRoles.Select(ur => ur.RoleId).ToList();
 
                 var rolesToAdd = input.RoleIds.Except(existingRoleIds).ToList();
@@ -124,7 +115,7 @@ namespace AspireStack.Application.UserManagement
 
                 foreach (var roleId in rolesToAdd)
                 {
-                    var role = await roleRepository.FindAsync(r => r.Id == roleId);
+                    var role = await UnitOfWork.Repository<Role, Guid>().FindAsync(r => r.Id == roleId);
                     if (role != null)
                     {
                         user.AddRole(role);
@@ -136,14 +127,14 @@ namespace AspireStack.Application.UserManagement
                     user.RemoveRole(roleId);
                 }
 
-                await unitOfWork.SaveChangesAsync();
+                await UnitOfWork.SaveChangesAsync();
             }
         }
 
         [AppServiceAuthorize(PermissionNames.User_Update)]
         public async Task ResetPasswordAsync(Guid id)
         {
-            var user = await userRepository.FindAsync(u => u.Id == id);
+            var user = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == id);
             if (user != null)
             {
                 string randomPassword = GenerateRandomPassword();
@@ -158,20 +149,20 @@ namespace AspireStack.Application.UserManagement
 
         public async Task UpdateCurrentUserAsync(UpdateCurrentUserDto input)
         {
-            var user = await userRepository.FindAsync(u => u.Id == currentUser.Id);
+            var user = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == CurrentUser.Id);
             if (user != null)
             {
                 user.FirstName = input.FirstName;
                 user.LastName = input.LastName;
-                await userRepository.UpdateAsync(user);
-                await unitOfWork.SaveChangesAsync();
+                await UnitOfWork.Repository<User, Guid>().UpdateAsync(user);
+                await UnitOfWork.SaveChangesAsync();
                 await ChangePasswordAsync(user.Id, input.NewPassword, input.CurrentPassword);
             }
         }
 
         private async Task ChangePasswordAsync(Guid id, string newPassword, string? currentPassword = null)
         {
-            var user = await userRepository.FindAsync(u => u.Id == id);
+            var user = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == id);
             if (user != null)
             {
                 if (!string.IsNullOrEmpty(currentPassword))
@@ -185,20 +176,20 @@ namespace AspireStack.Application.UserManagement
 
                 var passwordHash = userPasswordHasher.HashPassword(user, newPassword);
                 user.PasswordHashed = passwordHash;
-                await userRepository.UpdateAsync(user);
-                await unitOfWork.SaveChangesAsync();
+                await UnitOfWork.Repository<User, Guid>().UpdateAsync(user);
+                await UnitOfWork.SaveChangesAsync();
             }
         }
 
         [AppServiceAuthorize(PermissionNames.User_Delete)]
         public async Task DeleteUserAsync(Guid id)
         {
-            var user = await userRepository.FindAsync(u => u.Id == id);
+            var user = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == id);
             if (user != null)
             {
-                await userRoleRepository.DeleteAsync(ur => ur.UserId == id);
-                await userRepository.DeleteAsync(user);
-                await unitOfWork.SaveChangesAsync();
+                await UnitOfWork.Repository<UserRole, string>().DeleteAsync(ur => ur.UserId == id);
+                await UnitOfWork.Repository<User, Guid>().DeleteAsync(user);
+                await UnitOfWork.SaveChangesAsync();
             }
         }
     }

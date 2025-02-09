@@ -1,16 +1,16 @@
 import { Component, OnInit, signal } from '@angular/core';
 import * as coreui from '@coreui/angular';
-import { ApiService, GetUsersInput, UserDto, UserDtoPagedResult } from '../../services/api-services/api-service-proxies';
+import { ApiService, GetUsersInput, RoleDtoPagedResult, UserDto, UserDtoPagedResult, PagedResultRequest, RoleDto } from '../../services/api-services/api-service-proxies';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, NgFor } from '@angular/common';
 import "@angular/localize/init";
-import { CreateEditUserModalComponent } from './create-edit-user-modal/create-edit-user-modal.component';
+import { CreateEditRoleModalComponent } from './create-edit-role-modal/create-edit-role-modal.component';
 
 
 @Component({
-  selector: 'app-user-management',
-  templateUrl: './user-management.component.html',
-  styleUrls: ['./user-management.component.css'],
+  selector: 'app-role-management',
+  templateUrl: './role-management.component.html',
+  styleUrls: ['./role-management.component.css'],
   imports: [coreui.RowComponent, 
     coreui.ColComponent, 
     coreui.TextColorDirective, 
@@ -20,48 +20,45 @@ import { CreateEditUserModalComponent } from './create-edit-user-modal/create-ed
     coreui.TableDirective,
     coreui.ButtonDirective,
     coreui.PaginationComponent,
-    coreui.FormLabelDirective,
-    coreui.FormControlDirective,
-    CreateEditUserModalComponent,
+    CreateEditRoleModalComponent,
     DatePipe,
     FormsModule,
     NgFor
   ]
 })
-export class UserManagementComponent implements OnInit {
+export class RoleManagementComponent implements OnInit {
+
+
   public page = 1;
   public pageSize = 10;
   public totalPages = 0;
-  public filter = signal('');
-  users: UserDtoPagedResult = new UserDtoPagedResult();
+  roles: RoleDtoPagedResult = new RoleDtoPagedResult();
   constructor(
     private client: ApiService
   ) { }
 
   ngOnInit() {
-  this.getUsers();
+  this.getRoles();
   }
 
-  getUsers(){
-    this.client.getUsers(
-      new GetUsersInput({
-        filter: this.filter(),
+  getRoles(){
+    this.client.getAllRolesPaged(new PagedResultRequest({
         page: this.page,
         pageSize: this.pageSize
       })
     ).subscribe(pagedResult => {
-      this.users = pagedResult;
+      this.roles = pagedResult;
       this.totalPages = Math.ceil((pagedResult.totalCount ?? 0) / this.pageSize);
     })
   }
 
-  trackByUserId(index: number, user: UserDto) {
-    return user.id;
+  trackByRoleId(index: number, role: RoleDto) {
+    return role.id;
   }
 
   onPageChange(page: number) {
     this.page = page;
-    this.getUsers();
+    this.getRoles();
   }
 
   onPageSizeChange(pageSize: number | Event) {
@@ -69,7 +66,7 @@ export class UserManagementComponent implements OnInit {
       pageSize = parseInt((pageSize.target as HTMLSelectElement).value);
     }
     this.pageSize = pageSize;
-    this.getUsers();
+    this.getRoles();
   }
 
   public L(text: string) {

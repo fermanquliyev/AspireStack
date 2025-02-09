@@ -6,50 +6,78 @@ using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using AspireStack.Application.AppService.DTOs;
+using System.Data;
 
 namespace AspireStack.Application.UserManagement
 {
     [AppServiceAuthorize]
-    public class RoleAppService : IAppService
+    public class RoleAppService : AspireAppService
     {
-        private readonly IUnitOfWork unitOfWork;
-        private readonly IRepository<User, Guid> userRepository;
-        private readonly IRepository<Role, Guid> roleRepository;
-        private readonly IRepository<UserRole, string> userRoleRepository;
-        private readonly ICurrentUser currentUser;
+        private IRepository<Role, Guid> roleRepository = default!;
+        private IRepository<UserRole, string> userRoleRepository = default!;
 
-        public RoleAppService(IUnitOfWork unitOfWork, ICurrentUser currentUser)
+        public override void Init()
         {
-            this.unitOfWork = unitOfWork;
-            this.userRepository = unitOfWork.Repository<User, Guid>();
-            this.roleRepository = unitOfWork.Repository<Role, Guid>();
-            this.userRoleRepository = unitOfWork.Repository<UserRole, string>();
-            this.currentUser = currentUser;
+            this.roleRepository = UnitOfWork.Repository<Role, Guid>();
+            this.userRoleRepository = UnitOfWork.Repository<UserRole, string>();
         }
+
         [AppServiceAuthorize(PermissionNames.Role_View)]
         public async Task<RoleDto> GetRoleAsync(Guid id)
         {
-            var role = await roleRepository.GetAsync(r => r.Id == id);
+            var role = await AsyncExecuter.FirstOrDefaultAsync(roleRepository.GetQueryableAsNoTracking().Where(r => r.Id == id));
+            if (role == null)
+            {
+                throw new ValidationException("Role not found");
+            }
             return new RoleDto
             {
                 Id = role.Id,
                 Name = role.Name,
                 Description = role.Description,
-                Permissions = role.Permissions
+                Permissions = role.Permissions,
+                CreationTime = role.CreationTime,
+                LastModificationTime = role.LastModificationTime
             };
         }
+
         [AppServiceAuthorize(PermissionNames.Role_View)]
-        public async Task<List<RoleDto>> GetAllRolesAsync()
+        public async Task<List<RoleDto>> GetAllRoles()
         {
-            var roles = await roleRepository.GetListAsync(r => true);
-            return roles.Select(role => new RoleDto
-            {
-                Id = role.Id,
-                Name = role.Name,
-                Description = role.Description,
-                Permissions = role.Permissions
-            }).ToList();
+            var query = roleRepository.GetQueryableAsNoTracking()
+                .OrderBy(x => x.Name)
+                .Select(role => new RoleDto
+                {
+                    Id = role.Id,
+                    Name = role.Name,
+                    Description = role.Description,
+                    Permissions = role.Permissions
+                });
+            var roles = await AsyncExecuter.ToListAsync(query);
+            return roles;
         }
+
+        [AppServiceAuthorize(PermissionNames.Role_View)]
+        public async Task<PagedResult<RoleDto>> GetAllRolesPagedAsync(PagedResultRequest pagedResultRequest)
+        {
+            var query = roleRepository.GetQueryableAsNoTracking()
+                .OrderByDescending(x => x.CreationTime)
+                .Skip((pagedResultRequest.Page - 1) * pagedResultRequest.PageSize)
+                .Take(pagedResultRequest.PageSize)
+                .Select(role => new RoleDto
+                {
+                    Id = role.Id,
+                    Name = role.Name,
+                    Description = role.Description,
+                    CreationTime = role.CreationTime,
+                    LastModificationTime = role.LastModificationTime
+                });
+            var roles = await AsyncExecuter.ToListAsync(query);
+            var totalCount = await roleRepository.GetCountAsync();
+            return new PagedResult<RoleDto>(roles, totalCount);
+        }
+
         [AppServiceAuthorize(PermissionNames.Role_Create)]
         public async Task<RoleDto> CreateRoleAsync(RoleDto input)
         {
@@ -58,17 +86,16 @@ namespace AspireStack.Application.UserManagement
                 Name = input.Name,
                 Description = input.Description,
                 Permissions = input.Permissions,
-                CreationTime = DateTime.UtcNow,
-                CreatorId = currentUser.Id
             };
 
-            await roleRepository.InsertAsync(role,true);
+            await roleRepository.InsertAsync(role, true);
             return new RoleDto
             {
                 Id = role.Id,
                 Name = role.Name,
                 Description = role.Description,
-                Permissions = role.Permissions
+                Permissions = role.Permissions,
+                CreationTime = DateTime.UtcNow
             };
         }
         [AppServiceAuthorize(PermissionNames.Role_Update)]
@@ -78,10 +105,8 @@ namespace AspireStack.Application.UserManagement
             role.Name = input.Name;
             role.Description = input.Description;
             role.Permissions = input.Permissions;
-            role.LastModificationTime = DateTime.UtcNow;
-            role.LastModifierId = currentUser.Id;
 
-            await roleRepository.UpdateAsync(role, true);
+            await roleRepository.UpdateAsync(role);
             return input;
         }
         [AppServiceAuthorize(PermissionNames.Role_Delete)]

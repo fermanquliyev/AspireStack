@@ -5,6 +5,7 @@ using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace AspireStack.Application.UserManagement
 {
@@ -92,6 +93,11 @@ namespace AspireStack.Application.UserManagement
                 throw new ValidationException($"Cannot delete role as it is assigned to one or more users. User ids: {string.Join(", ", userRoles.Select(u => u.UserId))}");
             }
             await roleRepository.DeleteAsync(r => r.Id == id, true);
+        }
+
+        public List<string> GetAllPermissions()
+        {
+            return PermissionNames.Permissions.ToList();
         }
     }
 }

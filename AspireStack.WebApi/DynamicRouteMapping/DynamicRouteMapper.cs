@@ -1,13 +1,11 @@
 using AspireStack.Application.AppService;
 using AspireStack.Application.Security;
+using AspireStack.Domain.Cache;
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text.Json;
 
 namespace AspireStack.WebApi.DynamicRouteMapping
@@ -121,8 +119,9 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 var dbcontext = scope.ServiceProvider.GetRequiredService<DbContext>();
                 var unitOFWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
+                var cacheClient = scope.ServiceProvider.GetRequiredService<ICacheClient>();
 
-                if(service is null)
+                if (service is null)
                 {
                     throw new InvalidOperationException($"Service {serviceType.Name} not found in DI container");
                 }
@@ -130,6 +129,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 service.CurrentUser = currentUser;
                 service.UnitOfWork = unitOFWork;
                 service.AsyncExecuter = unitOFWork.AsyncQueryableExecuter;
+                service.CacheClient = cacheClient;
                 service.Init();
 
                 // Deserialize parameters from the HTTP request
@@ -148,26 +148,12 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     else
                     {
                         // JSON body for POST/PUT
-                        var body = await JsonSerializer.DeserializeAsync(context.Request.Body, param.ParameterType, new JsonSerializerOptions
+                        var body = await DeserializeAndValidateBodyAsync(context, param);
+                        if(context.Response.StatusCode == 400)
                         {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        // Validate the model
-                        var validationResults = new List<ValidationResult>();
-                        var validationContext = new ValidationContext(body);
-                        if (!Validator.TryValidateObject(body, validationContext, validationResults, true))
-                        {
-                            context.Response.StatusCode = 400;
-                            await context.Response.WriteAsJsonAsync(new WebApiResult<string[]>
-                            {
-                                Message = "Validation failed",
-                                StatusCode = 400,
-                                Success = false,
-                                Data = validationResults.Select(x=>$"{x.ErrorMessage}, Member names: {String.Join(",",x.MemberNames)}").ToArray()
-                            });
                             return;
                         }
-                        args.Add(body!);
+                        args.Add(body);
                     }
                 }
 
@@ -241,6 +227,32 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             };
 
             args.Add(parsedValue);
+        }
+        private static async Task<object?> DeserializeAndValidateBodyAsync(HttpContext context, ParameterInfo param)
+        {
+            // JSON body for POST/PUT
+            var body = await JsonSerializer.DeserializeAsync(context.Request.Body, param.ParameterType, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            // Validate the model
+            var validationResults = new List<ValidationResult>();
+            var validationContext = new ValidationContext(body);
+            if (!Validator.TryValidateObject(body, validationContext, validationResults, true))
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new WebApiResult<string[]>
+                {
+                    Message = "Validation failed",
+                    StatusCode = 400,
+                    Success = false,
+                    Data = validationResults.Select(x => $"{x.ErrorMessage}, Member names: {String.Join(",", x.MemberNames)}").ToArray()
+                });
+                return null;
+            }
+
+            return body;
         }
     }
 }

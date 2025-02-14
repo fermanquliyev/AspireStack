@@ -26,35 +26,50 @@ namespace AspireStack.Application.UserManagement
         [AppServiceAuthorize(PermissionNames.Role_View)]
         public async Task<RoleDto> GetRoleAsync(Guid id)
         {
-            var role = await AsyncExecuter.FirstOrDefaultAsync(roleRepository.GetQueryableAsNoTracking().Where(r => r.Id == id));
-            if (role == null)
+            var role = await this.CacheClient.GetAsync<RoleDto>($"role_{id}");
+            if (role is not null)
+            {
+                return role;
+            }
+
+            var roleEntity = await AsyncExecuter.FirstOrDefaultAsync(roleRepository.GetQueryableAsNoTracking().Where(r => r.Id == id));
+            if (roleEntity == null)
             {
                 throw new ValidationException("Role not found");
             }
-            return new RoleDto
+            role = new RoleDto
             {
-                Id = role.Id,
-                Name = role.Name,
-                Description = role.Description,
-                Permissions = role.Permissions,
-                CreationTime = role.CreationTime,
-                LastModificationTime = role.LastModificationTime
+                Id = roleEntity.Id,
+                Name = roleEntity.Name,
+                Description = roleEntity.Description,
+                Permissions = roleEntity.Permissions,
+                CreationTime = roleEntity.CreationTime,
+                LastModificationTime = roleEntity.LastModificationTime
             };
+            await this.CacheClient.SetAsync($"role_{id}", role, TimeSpan.FromMinutes(1));
+            return role;
         }
 
         [AppServiceAuthorize(PermissionNames.Role_View)]
         public async Task<List<RoleDto>> GetAllRoles()
         {
+            var roles = await this.CacheClient.GetAsync<List<RoleDto>>("roles");
+            if (roles is not null)
+            {
+                return roles;
+            }
+
             var query = roleRepository.GetQueryableAsNoTracking()
-                .OrderBy(x => x.Name)
-                .Select(role => new RoleDto
-                {
-                    Id = role.Id,
-                    Name = role.Name,
-                    Description = role.Description,
-                    Permissions = role.Permissions
-                });
-            var roles = await AsyncExecuter.ToListAsync(query);
+            .OrderBy(x => x.Name)
+            .Select(role => new RoleDto
+            {
+                Id = role.Id,
+                Name = role.Name,
+                Description = role.Description,
+                Permissions = role.Permissions
+            });
+            roles = await AsyncExecuter.ToListAsync(query);
+            await this.CacheClient.SetAsync("roles", roles, TimeSpan.FromMinutes(5));
             return roles;
         }
 
@@ -89,7 +104,7 @@ namespace AspireStack.Application.UserManagement
             };
 
             await roleRepository.InsertAsync(role, true);
-            return new RoleDto
+            var roleDto = new RoleDto
             {
                 Id = role.Id,
                 Name = role.Name,
@@ -97,16 +112,23 @@ namespace AspireStack.Application.UserManagement
                 Permissions = role.Permissions,
                 CreationTime = DateTime.UtcNow
             };
+            await this.CacheClient.SetAsync($"role_{role.Id}", roleDto, TimeSpan.FromMinutes(1));
+            return roleDto;
         }
         [AppServiceAuthorize(PermissionNames.Role_Update)]
         public async Task<RoleDto> UpdateRoleAsync(RoleDto input)
         {
             var role = await roleRepository.GetAsync(r => r.Id == input.Id);
+            if (role == null)
+            {
+                throw new ValidationException("Role not found");
+            }
             role.Name = input.Name;
             role.Description = input.Description;
             role.Permissions = input.Permissions;
 
             await roleRepository.UpdateAsync(role);
+            await this.CacheClient.SetAsync($"role_{role.Id}", input, TimeSpan.FromMinutes(1));
             return input;
         }
         [AppServiceAuthorize(PermissionNames.Role_Delete)]
@@ -118,6 +140,7 @@ namespace AspireStack.Application.UserManagement
                 throw new ValidationException($"Cannot delete role as it is assigned to one or more users. User ids: {string.Join(", ", userRoles.Select(u => u.UserId))}");
             }
             await roleRepository.DeleteAsync(r => r.Id == id, true);
+            await this.CacheClient.RemoveAsync($"role_{id}");
         }
 
         public List<string> GetAllPermissions()

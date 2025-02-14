@@ -1,3 +1,4 @@
+using AspireStack.Domain.Cache;
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
 using System;
@@ -13,6 +14,8 @@ namespace AspireStack.Application.AppService
         public required ICurrentUser CurrentUser { get; set; }
         public required IUnitOfWork UnitOfWork { get; set; }
         public required IAsyncQueryableExecuter AsyncExecuter { get; set; }
+
+        public required ICacheClient CacheClient { get; set; }
 
         /// <summary>
         /// Initialize the required services,repos from unit of work. 

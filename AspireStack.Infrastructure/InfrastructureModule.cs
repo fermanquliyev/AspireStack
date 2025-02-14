@@ -1,5 +1,7 @@
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
+using AspireStack.Domain.Cache;
+using AspireStack.Infrastructure.Cache;
 using AspireStack.Infrastructure.EntityFrameworkCore;
 using AspireStack.Infrastructure.Jwt;
 using AspireStack.Infrastructure.Repository;
@@ -41,6 +43,7 @@ namespace AspireStack.Infrastructure
             builder.Services.AddScoped(typeof(ICurrentUser), typeof(CurrentUser));
             builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
             builder.Services.AddScoped(typeof(IUserPasswordHasher<>), typeof(AspirePasswordHasher<>));
+            builder.Services.AddScoped<ICacheClient, CacheClient>();
         }
 
         private static IHostApplicationBuilder AddPostgresDbContext<TDbContext>(

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -41,16 +42,21 @@ public static class Extensions
         });
 
         builder.Services.AddOpenTelemetry()
+
             .WithMetrics(metrics =>
             {
                 metrics.AddAspNetCoreInstrumentation()
                        .AddHttpClientInstrumentation()
+                       .AddNpgsqlInstrumentation()
                        .AddRuntimeInstrumentation();
             })
             .WithTracing(tracing =>
             {
                 tracing.AddAspNetCoreInstrumentation()
-                       .AddHttpClientInstrumentation();
+                        .AddEntityFrameworkCoreInstrumentation()
+                        .AddNpgsql()
+                        .AddHttpClientInstrumentation()
+                        .AddRedisInstrumentation();
             });
 
         builder.AddOpenTelemetryExporters();

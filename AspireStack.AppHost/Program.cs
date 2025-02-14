@@ -10,6 +10,10 @@ var postgres = builder.AddPostgres("AspireStackPostgresServer", username, passwo
 
 IResourceBuilder<PostgresDatabaseResource> db = postgres.AddDatabase("AspireStackDb", "AspireStackDb");
 
+var cache = builder.AddRedis("cache")
+    .WithRedisInsight()
+    .WithDataVolume();
+
 var migrationService = builder.AddProject<Projects.AspireStack_DbInitializator>("migration")
     .WithReference(db)
     .WaitFor(db)
@@ -18,6 +22,8 @@ var migrationService = builder.AddProject<Projects.AspireStack_DbInitializator>(
 var AspireStackApi = builder.AddProject<Projects.AspireStack_WebApi>("AspireStackApi")
     .WithReference(db)
     .WaitFor(db)
+    .WithReference(cache)
+    .WaitFor(cache)
     .WaitForCompletion(migrationService)
     .WithExternalHttpEndpoints();
 

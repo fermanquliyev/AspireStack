@@ -32,11 +32,11 @@ internal class Program
         var generator = new TypeScriptClientGenerator(document, settings);
         string code = generator.GenerateFile();
 
+        // Fix the generated code
         code = code.Replace("import { Injectable, Inject, Optional, InjectionToken } from '@angular/core';", "import { Injectable, Inject, Optional, InjectionToken, Injector } from '@angular/core';");
         code = code.Replace("@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string", "injector: Injector");
         code = code.Replace("this.http = http;", "this.http = injector.get(HttpClient);");
         code = code.Replace("this.baseUrl = baseUrl ?? \"\";", "this.baseUrl = injector.get(API_BASE_URL, '');");
-
         code = Regex.Replace(code,
             @"encodeURIComponent\("""" *\+ *(.*?)\)",
             "encodeURIComponent(\"\" + JSON.stringify($1))");

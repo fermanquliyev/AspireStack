@@ -49,14 +49,16 @@ namespace AspireStack.Application.UserManagement
 
             if(user.CreatorId.HasValue && user.CreatorId != Guid.Empty)
             {
-                var creator = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == user.CreatorId);
+                var query = UnitOfWork.Repository<User, Guid>().GetQueryable().Where(u => u.Id == user.CreatorId);
+                var creator = await AsyncExecuter.FirstOrDefaultAsync(query);
                 if (creator != null)
                 resultDto.CreatedUser = UserDto.FromUser(creator);
             }
 
             if (user.LastModifierId.HasValue && user.LastModifierId != Guid.Empty)
             {
-                var lastModifier = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == user.LastModifierId);
+                var query = UnitOfWork.Repository<User, Guid>().GetQueryable().Where(u => u.Id == user.LastModifierId);
+                var lastModifier = await AsyncExecuter.FirstOrDefaultAsync(query);
                 if (lastModifier != null)
                     resultDto.LastModifiedUser = UserDto.FromUser(lastModifier);
             }

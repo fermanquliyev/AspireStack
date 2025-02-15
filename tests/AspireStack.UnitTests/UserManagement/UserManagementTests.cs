@@ -62,7 +62,6 @@ namespace AspireStack.UnitTests.UserManagement
             var user = new Bogus.Faker<User>()
                 .Generate();
             Assert.IsNotNull(user);
-
             Assert.ThrowsException<ValidationException>(() => user.Validate());
         }
 
@@ -174,6 +173,77 @@ namespace AspireStack.UnitTests.UserManagement
             asyncExecuterMock.Verify(a => a.CountAsync(It.IsAny<IQueryable<User>>(), It.IsAny<CancellationToken>()), Times.Once);
             asyncExecuterMock.Verify(a => a.ToListAsync(It.IsAny<IEnumerable<UserDto>>(), It.IsAny<CancellationToken>()), Times.Once);
             unitOfWorkMock.Verify(u => u.Repository<User, Guid>().GetQueryable(), Times.Once);
+        }
+
+        [TestMethod]
+        public async Task UserAppServiceTests_GetUserByIdAsync_Test()
+        {
+            // Arrange
+            var creatorUser = new Bogus.Faker<User>()
+               .RuleFor(u => u.Id, f => Guid.NewGuid())
+               .RuleFor(u => u.Username, f => f.Person.UserName)
+               .Generate();
+            var lastModifier = new Bogus.Faker<User>()
+               .RuleFor(u=>u.Id, f => Guid.NewGuid())
+               .RuleFor(u => u.Username, f => f.Person.UserName)
+               .Generate();
+            var user = new Bogus.Faker<User>()
+               .RuleFor(u => u.Id, f => Guid.NewGuid())
+               .RuleFor(u => u.FirstName, f => f.Person.FirstName)
+               .RuleFor(u => u.LastName, f => f.Person.LastName)
+               .RuleFor(u => u.Email, f => f.Person.Email)
+               .RuleFor(u => u.Username, f => f.Person.UserName)
+               .RuleFor(u => u.PasswordHashed, f => f.Internet.Password())
+               .RuleFor(u => u.CreatorId, f => creatorUser.Id)
+               .RuleFor(u => u.LastModifierId, f => lastModifier.Id)
+               .Generate();
+            var role = new Bogus.Faker<Role>()
+               .RuleFor(r => r.Id, f => Guid.NewGuid())
+               .RuleFor(r => r.Name, f => f.Lorem.Word())
+               .RuleFor(r => r.Description, f => f.Lorem.Sentence())
+               .RuleFor(r => r.Permissions, f => new string[] { f.Lorem.Word(), f.Lorem.Word() })
+               .Generate();
+            user.AddRole(role);
+            var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var inMemoryUserList = new List<User> { user,creatorUser,lastModifier };
+            unitOfWorkMock.Setup(u => u.Repository<User, Guid>().WithDetails(x=>x.Roles)).Returns(inMemoryUserList.AsQueryable());
+            unitOfWorkMock.Setup(u => u.Repository<User, Guid>().GetQueryable()).Returns(inMemoryUserList.AsQueryable());
+            var cacheServiceMock = new Mock<ICacheClient>();
+            var currentUserMock = new Mock<ICurrentUser>();
+            var asyncExecuterMock = new Mock<IAsyncQueryableExecuter>();
+            asyncExecuterMock.Setup(a => a.FirstOrDefaultAsync(It.IsAny<IQueryable<User>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IQueryable<User> queryable, CancellationToken cancellationToken) => queryable.FirstOrDefault());
+            var passworhasherMock = new Mock<IUserPasswordHasher<User>>();
+            var userAppService = new UsersAppService(passworhasherMock.Object)
+            {
+                UnitOfWork = unitOfWorkMock.Object,
+                CacheClient = cacheServiceMock.Object,
+                CurrentUser = currentUserMock.Object,
+                AsyncExecuter = asyncExecuterMock.Object
+            };
+
+            // Act
+            var userDto = await userAppService.GetUserByIdAsync(user.Id);
+
+            // Assert
+            Assert.IsNotNull(userDto);
+            Assert.IsTrue(userDto.Username == user.Username);
+            Assert.IsTrue(userDto.Email == user.Email);
+            Assert.IsTrue(userDto.Id == user.Id);
+            Assert.IsTrue(userDto.RoleIds.Count == 1);
+            Assert.IsTrue(userDto.RoleIds.Any(r => r == role.Id));
+
+            Assert.IsNotNull(userDto.CreatedUser);
+            Assert.IsTrue(userDto.CreatedUser.Id == creatorUser.Id);
+            Assert.IsTrue(userDto.CreatedUser.Username == creatorUser.Username);
+
+            Assert.IsNotNull(userDto.LastModifiedUser);
+            Assert.IsTrue(userDto.LastModifiedUser.Id == lastModifier.Id);
+            Assert.IsTrue(userDto.LastModifiedUser.Username == lastModifier.Username);
+
+            unitOfWorkMock.Verify(u => u.Repository<User, Guid>().WithDetails(x => x.Roles), Times.Once);
+            unitOfWorkMock.Verify(u => u.Repository<User, Guid>().GetQueryable(), Times.Exactly(2));
+            asyncExecuterMock.Verify(a => a.FirstOrDefaultAsync(It.IsAny<IQueryable<User>>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
         }
     }
 }

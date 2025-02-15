@@ -32,13 +32,13 @@ export class HttpErrorInterceptor implements HttpInterceptor {
                     }
                 }
             }
-            content += `Status: ${errorData.statusCode}<br>`;
+            content += `Status code: ${errorData.statusCode}<br>`;
             Swal.fire({
               title: errorData.message,
               icon: 'error',
               confirmButtonText: 'Close',
               html: content
-            })
+            });
         });
         
         // Rethrow the error to pass it down the chain.

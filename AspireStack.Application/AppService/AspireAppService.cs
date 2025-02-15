@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AspireStack.Application.AppService
 {
-    public abstract class AspireAppService
+    public abstract class AspireAppService: IAspireAppService
     {
         public required ICurrentUser CurrentUser { get; set; }
         public required IUnitOfWork UnitOfWork { get; set; }

@@ -27,9 +27,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Infrastructure"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.DbInitializator", "AspireStack.DbInitializator\AspireStack.DbInitializator.csproj", "{0BBFD382-63AF-48A2-BB95-DD6083137B41}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{52F69FD1-A661-4594-B91C-4FEAB42AA901}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.Angular.ServiceGenerator", "AspireStack.Angular.ServiceGenerator\AspireStack.Angular.ServiceGenerator.csproj", "{4798424E-258F-4B1C-8EA0-247E2B2727A3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AD434F3E-DF02-4C8D-8B82-C727DB837A9E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireStack.UnitTests", "tests\AspireStack.UnitTests\AspireStack.UnitTests.csproj", "{A6BE0B67-1EFC-4C17-8DE0-3F1E2A454D28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,6 +85,10 @@ Global
 		{4798424E-258F-4B1C-8EA0-247E2B2727A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4798424E-258F-4B1C-8EA0-247E2B2727A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4798424E-258F-4B1C-8EA0-247E2B2727A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6BE0B67-1EFC-4C17-8DE0-3F1E2A454D28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6BE0B67-1EFC-4C17-8DE0-3F1E2A454D28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6BE0B67-1EFC-4C17-8DE0-3F1E2A454D28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6BE0B67-1EFC-4C17-8DE0-3F1E2A454D28}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +105,7 @@ Global
 		{91313CE6-3B3C-4FBD-82D1-114FAAFA046A} = {9C2A6274-F91E-4A45-8219-C51D85D5EA7D}
 		{0BBFD382-63AF-48A2-BB95-DD6083137B41} = {9C2A6274-F91E-4A45-8219-C51D85D5EA7D}
 		{4798424E-258F-4B1C-8EA0-247E2B2727A3} = {9C2A6274-F91E-4A45-8219-C51D85D5EA7D}
+		{A6BE0B67-1EFC-4C17-8DE0-3F1E2A454D28} = {AD434F3E-DF02-4C8D-8B82-C727DB837A9E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A7AC130-33BE-4B5B-99AF-D4A049A38C88}

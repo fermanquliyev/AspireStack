@@ -11,7 +11,7 @@ using System.ComponentModel.DataAnnotations;
 namespace AspireStack.Application.UserManagement
 {
     [AppServiceAuthorize]
-    public class UsersAppService : AspireAppService
+    public class UsersAppService : AspireAppService, IUserAppService
     {
         private readonly IUserPasswordHasher<User> userPasswordHasher;
 
@@ -65,7 +65,7 @@ namespace AspireStack.Application.UserManagement
         }
 
         [AppServiceAuthorize(PermissionNames.User_Create)]
-        public async Task CreateUserAsync(CreateEditUserDto input)
+        public async Task<Guid> CreateUserAsync(CreateEditUserDto input)
         {
             var user = new User
             {
@@ -93,6 +93,7 @@ namespace AspireStack.Application.UserManagement
             }
 
             await UnitOfWork.SaveChangesAsync();
+            return user.Id;
         }
 
         [AppServiceAuthorize(PermissionNames.User_Update)]

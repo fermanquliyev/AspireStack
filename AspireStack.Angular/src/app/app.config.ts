@@ -13,8 +13,9 @@ import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@a
 import { DropdownModule, SidebarModule } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { routes } from './app.routes';
-import { AuthInterceptorService } from './interceptors/AuthInterceptor.service';
+import { AuthInterceptorService } from './interceptors/auth-interceptor/AuthInterceptor.service';
 import { API_BASE_URL } from './services/api-services/api-service-proxies';
+import { HttpErrorInterceptor } from './interceptors/http-error-interceptor/http-error-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,6 +38,7 @@ export const appConfig: ApplicationConfig = {
     IconSetService,
     provideAnimations(),
     {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true},
+    {provide: HTTP_INTERCEPTORS, useClass: HttpErrorInterceptor, multi: true},
     {provide: API_BASE_URL, useValue: '/api'},
   ],
 };

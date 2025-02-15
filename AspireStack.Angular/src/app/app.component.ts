@@ -11,12 +11,11 @@ import { HttpClient } from '@angular/common/http';
 
 @Component({
     selector: 'app-root',
-    template: '<router-outlet />',
+    template: `<router-outlet />`,
     imports: [RouterOutlet]
 })
 export class AppComponent implements OnInit {
   title = 'AspireStack';
-
   readonly #destroyRef: DestroyRef = inject(DestroyRef);
   readonly #activatedRoute: ActivatedRoute = inject(ActivatedRoute);
   readonly #router = inject(Router);

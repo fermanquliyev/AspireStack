@@ -33,10 +33,9 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     continue;
                 }
 
-                var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.DeclaringType == serviceType);
+                var methods = serviceType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.DeclaringType == serviceType && m.Name != nameof(IAspireAppService.Init));
                 var serviceAuthAttribute = serviceType.GetCustomAttribute<AppServiceAuthorizeAttribute>();
                 var allowAnonymous = serviceAuthAttribute == null || serviceType.GetCustomAttribute<AppServiceAllowAnonymousAttribute>() != null;
-
                 foreach (var method in methods)
                 {
                     notMappedAttribute = method.GetCustomAttribute<NotMappedAttribute>();
@@ -48,16 +47,17 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     var httpMethod = httpMethodAttribute?.Method.Method ?? GetHttpMethod(method.Name); // Determine HTTP method
                     var controllerName = httpMethodAttribute?.ControllerName ?? serviceType.Name.Replace("AppService", "");
                     var actionName = httpMethodAttribute?.ActionName ?? method.Name.Replace("Async", "");
-                    var route = $"/{controllerName}/{actionName}";
+                    var route = $"/{actionName}";
+                    var mapGroup = app.MapGroup(controllerName);
                     var methodAuthAttribute = method.GetCustomAttribute<AppServiceAuthorizeAttribute>();
                     var methodAllowAnonymous = (allowAnonymous && methodAuthAttribute == null) || method.GetCustomAttribute<AppServiceAllowAnonymousAttribute>() != null;
                     var methodDelegate = CreateEndpointDelegate(app, serviceType, method);
                     RouteHandlerBuilder routeHandler = httpMethod switch
                     {
-                        "GET" => app.MapGet(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
-                        "POST" => app.MapPost(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
-                        "PUT" => app.MapPut(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
-                        "DELETE" => app.MapDelete(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        "GET" => mapGroup.MapGet(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        "POST" => mapGroup.MapPost(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        "PUT" => mapGroup.MapPut(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
+                        "DELETE" => mapGroup.MapDelete(route, methodDelegate).WithTags(controllerName).WithMetadata(method),
                         _ => throw new InvalidOperationException($"Unsupported HTTP method for {method.Name}"),
                     };
                     if (!methodAllowAnonymous)
@@ -79,8 +79,6 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 }
             }
         }
-
-
 
         /// <summary>
         /// Determines the HTTP method based on the method name.
@@ -247,7 +245,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     Message = "Validation failed",
                     StatusCode = 400,
                     Success = false,
-                    Data = validationResults.Select(x => $"{x.ErrorMessage}, Member names: {String.Join(",", x.MemberNames)}").ToArray()
+                    Data = validationResults.Select(x => x.ErrorMessage).ToArray()
                 });
                 return null;
             }

@@ -43,5 +43,7 @@ internal class Program
 
         await File.WriteAllTextAsync(outputPath, code);
         Console.WriteLine("✅ Angular API service proxies generated successfully!");
+        Console.WriteLine($"📄 Output: {outputPath}");
+        Console.WriteLine(code);
     }
 }

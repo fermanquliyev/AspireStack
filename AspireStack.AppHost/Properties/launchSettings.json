@@ -28,6 +28,7 @@
     },
     "manifest": {
       "commandName": "Project",
+      "launchBrowser": false,
       "commandLineArgs": "--publisher manifest --output-path aspire-manifest.json",
       "dotnetRunMessages": true,
       "environmentVariables": {

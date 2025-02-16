@@ -1,6 +1,92 @@
 {
   "$schema": "https://json.schemastore.org/aspire-8.0.json",
   "resources": {
+    "username": {
+      "type": "parameter.v0",
+      "value": "{username.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true
+        }
+      }
+    },
+    "password": {
+      "type": "parameter.v0",
+      "value": "{password.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string",
+          "secret": true
+        }
+      }
+    },
+    "AspireStackPostgresServer": {
+      "type": "container.v0",
+      "connectionString": "Host={AspireStackPostgresServer.bindings.tcp.host};Port={AspireStackPostgresServer.bindings.tcp.port};Username={username.value};Password={password.value}",
+      "image": "docker.io/library/postgres:17.0",
+      "volumes": [
+        {
+          "name": "AspireStackDbVolume",
+          "target": "/var/lib/postgresql/data",
+          "readOnly": false
+        }
+      ],
+      "env": {
+        "POSTGRES_HOST_AUTH_METHOD": "scram-sha-256",
+        "POSTGRES_INITDB_ARGS": "--auth-host=scram-sha-256 --auth-local=scram-sha-256",
+        "POSTGRES_USER": "{username.value}",
+        "POSTGRES_PASSWORD": "{password.value}"
+      },
+      "bindings": {
+        "tcp": {
+          "scheme": "tcp",
+          "protocol": "tcp",
+          "transport": "tcp",
+          "targetPort": 5432
+        }
+      }
+    },
+    "AspireStackDb": {
+      "type": "value.v0",
+      "connectionString": "{AspireStackPostgresServer.connectionString};Database=AspireStackDb"
+    },
+    "cache": {
+      "type": "container.v0",
+      "connectionString": "{cache.bindings.tcp.host}:{cache.bindings.tcp.port}",
+      "image": "docker.io/library/redis:7.4",
+      "args": [
+        "--save",
+        "60",
+        "1"
+      ],
+      "volumes": [
+        {
+          "name": "aspirestack.apphost-af2a51e413-cache-data",
+          "target": "/data",
+          "readOnly": false
+        }
+      ],
+      "bindings": {
+        "tcp": {
+          "scheme": "tcp",
+          "protocol": "tcp",
+          "transport": "tcp",
+          "targetPort": 6379
+        }
+      }
+    },
+    "migration": {
+      "type": "project.v0",
+      "path": "../AspireStack.DbInitializator/AspireStack.DbInitializator.csproj",
+      "env": {
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY": "in_memory",
+        "ConnectionStrings__AspireStackDb": "{AspireStackDb.connectionString}",
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      }
+    },
     "AspireStackApi": {
       "type": "project.v0",
       "path": "../AspireStack.WebApi/AspireStack.WebApi.csproj",
@@ -9,7 +95,9 @@
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY": "in_memory",
         "ASPNETCORE_FORWARDEDHEADERS_ENABLED": "true",
-        "HTTP_PORTS": "{AspireStackApi.bindings.http.targetPort}"
+        "HTTP_PORTS": "{AspireStackApi.bindings.http.targetPort}",
+        "ConnectionStrings__AspireStackDb": "{AspireStackDb.connectionString}",
+        "ConnectionStrings__cache": "{cache.connectionString}"
       },
       "bindings": {
         "http": {
@@ -26,12 +114,23 @@
         }
       }
     },
+    "aspirestack-angular-servicegenerator": {
+      "type": "project.v0",
+      "path": "../AspireStack.Angular.ServiceGenerator/AspireStack.Angular.ServiceGenerator.csproj",
+      "env": {
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY": "in_memory",
+        "services__AspireStackApi__http__0": "{AspireStackApi.bindings.http.url}",
+        "services__AspireStackApi__https__0": "{AspireStackApi.bindings.https.url}"
+      }
+    },
     "aspirestackui": {
       "type": "dockerfile.v0",
       "path": "../AspireStack.Angular/Dockerfile",
       "context": "../AspireStack.Angular",
       "env": {
-        "NODE_ENV": "development",
+        "NODE_ENV": "production",
         "services__AspireStackApi__http__0": "{AspireStackApi.bindings.http.url}",
         "services__AspireStackApi__https__0": "{AspireStackApi.bindings.https.url}",
         "PORT": "{aspirestackui.bindings.http.targetPort}"

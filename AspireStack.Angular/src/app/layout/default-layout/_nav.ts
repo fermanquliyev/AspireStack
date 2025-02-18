@@ -18,34 +18,15 @@ export const navItems: INavData[] = [
         {
           name: $localize`User Managment`,
           url: '/user-management',
-          icon: 'nav-icon-bullet'
+          icon: 'nav-icon-bullet',
+          attributes: { permission: 'UserManagement' }
         },
         {
           name: $localize`Role Managment`,
           url: '/role-management',
-          icon: 'nav-icon-bullet'
+          icon: 'nav-icon-bullet',
+          attributes: { permission: 'RoleManagement' }
         },
       ]
-  },
-  {
-    title: true,
-    name: 'Theme'
-  },
-  {
-    name: 'Colors',
-    url: '/theme/colors',
-    iconComponent: { name: 'cil-drop' }
-  },
-  {
-    name: 'Typography',
-    url: '/theme/typography',
-    linkProps: { fragment: 'headings' },
-    iconComponent: { name: 'cil-pencil' }
   }
-  // {
-  //   name: 'Docs',
-  //   url: 'https://coreui.io/angular/docs/',
-  //   iconComponent: { name: 'cil-description' },
-  //   attributes: { target: '_blank' }
-  // }
 ];

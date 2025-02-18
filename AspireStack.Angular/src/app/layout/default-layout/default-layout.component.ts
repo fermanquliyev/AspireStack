@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NgScrollbar } from 'ngx-scrollbar';
 
@@ -17,6 +17,7 @@ import {
 
 import { DefaultFooterComponent, DefaultHeaderComponent } from './';
 import { navItems } from './_nav';
+import { AppBaseComponent } from '../../modules/shared/components/base-component/AppBaseComponent';
 
 function isOverflown(element: HTMLElement) {
   return (
@@ -47,12 +48,33 @@ function isOverflown(element: HTMLElement) {
         DefaultFooterComponent
     ]
 })
-export class DefaultLayoutComponent {
-  public navItems = navItems;
+export class DefaultLayoutComponent extends AppBaseComponent implements AfterViewInit {
+  
+  public menuItems = [...navItems];
 
   onScrollbarUpdate($event: any) {
     // if ($event.verticalUsed) {
     // console.log('verticalUsed', $event.verticalUsed);
     // }
+  }
+
+  ngAfterViewInit(): void {
+    this.menuItems = navItems.filter((item) => {
+      if(!!item.attributes && item.attributes['permission']){
+        return this.hasPermission(item.attributes['permission']);
+      }
+      return true;
+    });
+
+    this.menuItems.forEach((item) => {
+      if (item.children) {
+        item.children = item.children.filter((child) => {
+          if(!!child.attributes && child.attributes['permission']){
+            return this.hasPermission(child.attributes['permission']);
+          }
+          return true;
+        });
+      }
+    });
   }
 }

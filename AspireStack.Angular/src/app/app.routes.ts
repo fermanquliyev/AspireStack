@@ -9,10 +9,16 @@ const authGuard: CanActivateFn = (
 ) => {
   const currentUserService = inject(CurrentUserService);
   if (currentUserService.getIsAuthenticated()) {
+    var permission = route.data['permission'];
+    if(permission != null){
+      if(!currentUserService.hasPermission(permission)){
+        console.log('Not authorized, redirecting to dashboard');
+        return inject(Router).createUrlTree(['/dashboard']);
+      }
+    }
     return true;
   } else {
     console.log('Not authenticated, redirecting to login');
-    console.log({...currentUserService})
     return inject(Router).createUrlTree(['/login']);
   }
 };
@@ -33,62 +39,26 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadChildren: () => import('./modules/dashboard/routes').then((m) => m.routes),
-        //canActivate: [authGuard]
+        canActivate: [authGuard],
+        data: {
+          permission: null // Home page does not require any permission
+        }
       },
       {
         path: 'user-management',
         loadChildren: () => import('./modules/user-management/routes').then((m) => m.routes),
-        canActivate: [authGuard]
+        canActivate: [authGuard],
+        data: {
+          permission: 'UserManagement'
+        }
       },
       {
         path: 'role-management',
         loadChildren: () => import('./modules/role-management/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'theme',
-        loadChildren: () => import('./modules/theme/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'base',
-        loadChildren: () => import('./modules/base/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'buttons',
-        loadChildren: () => import('./modules/buttons/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'forms',
-        loadChildren: () => import('./modules/forms/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'icons',
-        loadChildren: () => import('./modules/icons/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'notifications',
-        loadChildren: () => import('./modules/notifications/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'widgets',
-        loadChildren: () => import('./modules/widgets/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'charts',
-        loadChildren: () => import('./modules/charts/routes').then((m) => m.routes),
-        canActivate: [authGuard]
-      },
-      {
-        path: 'pages',
-        loadChildren: () => import('./modules/pages/routes').then((m) => m.routes),
-        canActivate: [authGuard]
+        canActivate: [authGuard],
+        data: {
+          permission: 'RoleManagement'
+        }
       }
     ]
   },

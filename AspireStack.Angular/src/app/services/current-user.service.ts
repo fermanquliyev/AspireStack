@@ -61,7 +61,7 @@ export class CurrentUserService {
   }
 
   public hasPermission(permission: string): boolean {
-    return this.permissions.includes(permission);
+    return this.permissions.some(p=> p.startsWith(permission));
   }
 
   public getUserId(): string | null {

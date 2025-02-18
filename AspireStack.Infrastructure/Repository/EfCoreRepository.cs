@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Data;
 using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore.Query;
-using OpenTelemetry.Resources;
 
 namespace AspireStack.Infrastructure.Repository
 {

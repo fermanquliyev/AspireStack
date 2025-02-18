@@ -1,6 +1,7 @@
 using AspireStack.Application;
 using AspireStack.Application.AppService;
 using AspireStack.Domain.Entities.UserManagement;
+using AspireStack.Domain.Localization;
 using AspireStack.Domain.Services;
 using AspireStack.Domain.Shared.UserManagement;
 using AspireStack.Infrastructure;
@@ -8,13 +9,15 @@ using AspireStack.WebApi.DynamicRouteMapping;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 
-internal class Program
+internal static class Program
 {
     private static void Main(string[] args)
     {
@@ -77,11 +80,19 @@ internal class Program
         builder.Services.AddHttpContextAccessor();
         builder.Services.RegisterAppServices();
         builder.AddRedisDistributedCache("cache");
+        builder.Services.Configure<RequestLocalizationOptions>(options =>
+        {
+            var supportedCultures = CultureHelper.GetSupportedCultures();
+            options.DefaultRequestCulture = new RequestCulture(CultureHelper.DefaultCulture);
+            options.SupportedCultures = supportedCultures.ToList();
+            options.SupportedUICultures = supportedCultures.ToList();
+        });
 
         var app = builder.Build();
         app.RegisterDynamicRoutes();
         app.MapDefaultEndpoints();
         app.MapControllers();
+        app.SetupLocalization();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -97,6 +108,13 @@ internal class Program
                 .AllowAnyOrigin());
 
         app.Run();
+    }
+
+    private static void SetupLocalization(this WebApplication app)
+    {
+        app.UseRequestLocalization();
+        var localizationProvider = app.Services.GetRequiredService<ILocalizationProvider>();
+        LocalizationInitializer.Initialize(localizationProvider);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using AspireStack.Application.AppService;
 using AspireStack.Application.Security;
 using AspireStack.Domain.Cache;
+using AspireStack.Domain.Localization;
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
 using Microsoft.EntityFrameworkCore;
@@ -118,6 +119,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 var unitOFWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var currentUser = scope.ServiceProvider.GetRequiredService<ICurrentUser>();
                 var cacheClient = scope.ServiceProvider.GetRequiredService<ICacheClient>();
+                var localizationProvider = scope.ServiceProvider.GetRequiredService<ILocalizationProvider>();
 
                 if (service is null)
                 {
@@ -128,6 +130,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 service.UnitOfWork = unitOFWork;
                 service.AsyncExecuter = unitOFWork.AsyncQueryableExecuter;
                 service.CacheClient = cacheClient;
+                service.LocalizationProvider = localizationProvider;
                 service.Init();
 
                 // Deserialize parameters from the HTTP request
@@ -146,7 +149,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     else
                     {
                         // JSON body for POST/PUT
-                        var body = await DeserializeAndValidateBodyAsync(context, param);
+                        var body = await DeserializeAndValidateBodyAsync(context, param, localizationProvider);
                         if(context.Response.StatusCode == 400)
                         {
                             return;
@@ -187,7 +190,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     context.Response.StatusCode = 500;
                     await context.Response.WriteAsJsonAsync(new WebApiResult
                     {
-                        Message = "An error occurred while processing the request",
+                        Message = localizationProvider.GetResource("ErrorOccurredWhileProcessingRequest"),
                         Success = false,
                         StatusCode = 500
                     });
@@ -226,7 +229,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
 
             args.Add(parsedValue);
         }
-        private static async Task<object?> DeserializeAndValidateBodyAsync(HttpContext context, ParameterInfo param)
+        private static async Task<object?> DeserializeAndValidateBodyAsync(HttpContext context, ParameterInfo param, ILocalizationProvider localizationProvider)
         {
             // JSON body for POST/PUT
             var body = await JsonSerializer.DeserializeAsync(context.Request.Body, param.ParameterType, new JsonSerializerOptions
@@ -242,7 +245,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                 context.Response.StatusCode = 400;
                 await context.Response.WriteAsJsonAsync(new WebApiResult<string[]>
                 {
-                    Message = "Validation failed",
+                    Message = localizationProvider.GetResource("ValidationException"),
                     StatusCode = 400,
                     Success = false,
                     Data = validationResults.Select(x => x.ErrorMessage).ToArray()

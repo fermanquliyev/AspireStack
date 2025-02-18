@@ -3,9 +3,7 @@ using AspireStack.Application.Security;
 using AspireStack.Application.RoleManagement.DTOs;
 using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Domain.Repository;
-using AspireStack.Domain.Services;
 using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
 using AspireStack.Application.AppService.DTOs;
 using System.Data;
 
@@ -35,7 +33,7 @@ namespace AspireStack.Application.UserManagement
             var roleEntity = await AsyncExecuter.FirstOrDefaultAsync(roleRepository.GetQueryableAsNoTracking().Where(r => r.Id == id));
             if (roleEntity == null)
             {
-                throw new ValidationException("Role not found");
+                throw new ValidationException(L("RoleNotFound"));
             }
             role = new RoleDto
             {
@@ -137,7 +135,7 @@ namespace AspireStack.Application.UserManagement
             var userRoles = await userRoleRepository.GetListAsync(ur => ur.RoleId == id);
             if (userRoles.Count > 0)
             {
-                throw new ValidationException($"Cannot delete role as it is assigned to one or more users. User ids: {string.Join(", ", userRoles.Select(u => u.UserId))}");
+                throw new ValidationException(L("CantDeleteRoleWithUsers", string.Join(", ", userRoles.Select(u => u.UserId))));
             }
             await roleRepository.DeleteAsync(r => r.Id == id, true);
             await this.CacheClient.RemoveAsync($"role_{id}");

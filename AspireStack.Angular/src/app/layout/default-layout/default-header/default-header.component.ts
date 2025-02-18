@@ -25,6 +25,7 @@ import {
 import { IconDirective } from '@coreui/icons-angular';
 import { AuthService } from '../../../services/auth-service.service';
 import { CurrentUserService } from '../../../services/current-user.service';
+import { LocalizationService } from 'src/app/services/localization/localization.service';
 
 @Component({
     selector: 'app-default-header',
@@ -38,12 +39,23 @@ export class DefaultHeaderComponent extends HeaderComponent {
   readonly authService = inject<AuthService>(AuthService);
   readonly router = inject(Router)
   public readonly currentUser = inject<CurrentUserService>(CurrentUserService);
+  public readonly localization = inject(LocalizationService);
 
   readonly colorModes = [
     { name: 'light', text: 'Light', icon: 'cilSun' },
     { name: 'dark', text: 'Dark', icon: 'cilMoon' },
     { name: 'auto', text: 'Auto', icon: 'cilContrast' }
   ];
+
+  readonly languages = computed(() => {
+    return this.localization.getSupportedLanguages().map(lang => ({ name: lang, 
+      text: lang.split('-')[1].toUpperCase(),
+      icon: lang.split('-')[1].toLowerCase()}));
+  });
+
+  readonly currentLanguageFlag = computed(() => {
+    return this.languages().find(lang => lang.name === this.localization.getCurrentLanguage())?.icon ?? 'us';
+  });
 
   readonly icons = computed(() => {
     const currentMode = this.colorMode();
@@ -130,6 +142,12 @@ export class DefaultHeaderComponent extends HeaderComponent {
     { id: 3, title: 'Add new layouts', value: 75, color: 'info' },
     { id: 4, title: 'Angular Version', value: 100, color: 'success' }
   ];
+
+  public setLanguage(lang: string): void {
+    this.localization.setCurrentLanguage(lang);
+    this.localization.loadTranslations();
+    this.router.navigate([this.router.url]);
+  }
 
   logout(): void {
     this.authService.deleteAuthToken();

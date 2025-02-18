@@ -8,6 +8,7 @@ import { ColorModeService } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { iconSubset } from './icons/icon-subset';
 import { HttpClient } from '@angular/common/http';
+import { LocalizationService } from './services/localization/localization.service';
 
 @Component({
     selector: 'app-root',
@@ -24,7 +25,10 @@ export class AppComponent implements OnInit {
   readonly #colorModeService = inject(ColorModeService);
   readonly #iconSetService = inject(IconSetService);
 
-  constructor(private http: HttpClient) {
+  readonly #localizationService = inject(LocalizationService);
+
+  constructor() {
+    this.#localizationService.loadTranslations();
     this.#titleService.setTitle(this.title);
     // iconSet singleton
     this.#iconSetService.icons = { ...iconSubset };

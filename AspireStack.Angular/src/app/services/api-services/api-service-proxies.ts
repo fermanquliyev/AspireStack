@@ -33,6 +33,14 @@ export interface IApiService {
     /**
      * @return OkResult
      */
+    getLocalization(culture: string): Observable<LocalizationResultDto>;
+    /**
+     * @return OkResult
+     */
+    getCurrentLocalization(): Observable<LocalizationResultDto>;
+    /**
+     * @return OkResult
+     */
     getRole(id: string): Observable<RoleDto>;
     /**
      * @return OkResult
@@ -263,6 +271,154 @@ export class ApiService implements IApiService {
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result200 = ObjectWebApiResult.fromJS(resultData200);
             return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OkResult
+     */
+    getLocalization(culture: string): Observable<LocalizationResultDto> {
+        let url_ = this.baseUrl + "/Localization/GetLocalization?";
+        if (culture === undefined || culture === null)
+            throw new Error("The parameter 'culture' must be defined and cannot be null.");
+        else
+            url_ += "culture=" + encodeURIComponent("" + JSON.stringify(culture)) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetLocalization(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetLocalization(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<LocalizationResultDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<LocalizationResultDto>;
+        }));
+    }
+
+    protected processGetLocalization(response: HttpResponseBase): Observable<LocalizationResultDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LocalizationResultDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = StringArrayWebApiResult.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 500) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result500: any = null;
+            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result500 = StringWebApiResult.fromJS(resultData500);
+            return throwException("Internal Server Error", status, _responseText, _headers, result500);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = StringWebApiResult.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OkResult
+     */
+    getCurrentLocalization(): Observable<LocalizationResultDto> {
+        let url_ = this.baseUrl + "/Localization/GetCurrentLocalization";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetCurrentLocalization(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetCurrentLocalization(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<LocalizationResultDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<LocalizationResultDto>;
+        }));
+    }
+
+    protected processGetCurrentLocalization(response: HttpResponseBase): Observable<LocalizationResultDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LocalizationResultDto.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = StringArrayWebApiResult.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 500) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result500: any = null;
+            let resultData500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result500 = StringWebApiResult.fromJS(resultData500);
+            return throwException("Internal Server Error", status, _responseText, _headers, result500);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = StringWebApiResult.fromJS(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -1506,6 +1662,70 @@ export interface IGuidWebApiResult {
     success?: boolean;
     message?: string | undefined;
     statusCode?: number;
+}
+
+export class LocalizationResultDto implements ILocalizationResultDto {
+    supportedCultures!: string[] | undefined;
+    culture!: string | undefined;
+    resources!: { [key: string]: string; } | undefined;
+
+    constructor(data?: ILocalizationResultDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["supportedCultures"])) {
+                this.supportedCultures = [] as any;
+                for (let item of _data["supportedCultures"])
+                    this.supportedCultures!.push(item);
+            }
+            this.culture = _data["culture"];
+            if (_data["resources"]) {
+                this.resources = {} as any;
+                for (let key in _data["resources"]) {
+                    if (_data["resources"].hasOwnProperty(key))
+                        (<any>this.resources)![key] = _data["resources"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): LocalizationResultDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new LocalizationResultDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.supportedCultures)) {
+            data["supportedCultures"] = [];
+            for (let item of this.supportedCultures)
+                data["supportedCultures"].push(item);
+        }
+        data["culture"] = this.culture;
+        if (this.resources) {
+            data["resources"] = {};
+            for (let key in this.resources) {
+                if (this.resources.hasOwnProperty(key))
+                    (<any>data["resources"])[key] = (<any>this.resources)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface ILocalizationResultDto {
+    supportedCultures: string[] | undefined;
+    culture: string | undefined;
+    resources: { [key: string]: string; } | undefined;
 }
 
 export class LoginRequest implements ILoginRequest {

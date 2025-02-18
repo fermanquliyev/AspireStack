@@ -3,7 +3,6 @@ using AspireStack.Application.AppService.DTOs;
 using AspireStack.Application.Security;
 using AspireStack.Application.UserManagement.DTOs;
 using AspireStack.Domain.Entities.UserManagement;
-using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
 using AspireStack.Domain.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
@@ -43,7 +42,7 @@ namespace AspireStack.Application.UserManagement
             var user = await AsyncExecuter.FirstOrDefaultAsync(userQuery);
             if (user == null)
             {
-                throw new ApplicationException("User not found.");
+                throw new ApplicationException(L("UserNotFound"));
             }
             var resultDto = CreateEditUserDto.FromUser(user);
 
@@ -173,7 +172,7 @@ namespace AspireStack.Application.UserManagement
                     var passwordVerificationResult = userPasswordHasher.VerifyHashedPassword(user, user.PasswordHashed, currentPassword);
                     if (passwordVerificationResult != PasswordVerificationResult.Success)
                     {
-                        throw new ValidationException("Current password is incorrect.");
+                        throw new ValidationException(L("InvalidCurrentPassword"));
                     }
                 }
 

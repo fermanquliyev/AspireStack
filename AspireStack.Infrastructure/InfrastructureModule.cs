@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
+using AspireStack.Domain.Localization;
 
 namespace AspireStack.Infrastructure
 {
@@ -44,6 +45,7 @@ namespace AspireStack.Infrastructure
             builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
             builder.Services.AddScoped(typeof(IUserPasswordHasher<>), typeof(AspirePasswordHasher<>));
             builder.Services.AddScoped<ICacheClient, CacheClient>();
+            builder.Services.AddSingleton<ILocalizationProvider, LocalizationProvider>();
         }
 
         private static IHostApplicationBuilder AddPostgresDbContext<TDbContext>(

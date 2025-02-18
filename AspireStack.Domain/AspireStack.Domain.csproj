@@ -7,6 +7,31 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Localization\AspireStack\AspireStack.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Localization\AspireStack\AspireStack-az-AZ.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Localization\AspireStack\AspireStack-fr-FR.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Localization\AspireStack\AspireStack-ru-RU.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Localization\AspireStack\AspireStack-tr-TR.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Localization\AspireStack\AspireStack.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AspireStack.Domain.Shared\AspireStack.Domain.Shared.csproj" />
   </ItemGroup>
 

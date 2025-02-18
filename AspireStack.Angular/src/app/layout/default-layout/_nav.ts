@@ -1,9 +1,8 @@
 import { INavData } from '@coreui/angular';
-import "@angular/localize/init";
 
 export const navItems: INavData[] = [
   {
-    name: $localize`Dashboard`,
+    name: 'Dashboard',
     url: '/dashboard',
     iconComponent: { name: 'cil-speedometer' },
     badge: {
@@ -12,17 +11,17 @@ export const navItems: INavData[] = [
     }
   },
   {
-      name: $localize`Identity`,
+      name: 'Identity',
       iconComponent: { name: 'cil-user' },
       children: [
         {
-          name: $localize`User Managment`,
+          name: 'User Managment',
           url: '/user-management',
           icon: 'nav-icon-bullet',
           attributes: { permission: 'UserManagement' }
         },
         {
-          name: $localize`Role Managment`,
+          name: 'Role Managment',
           url: '/role-management',
           icon: 'nav-icon-bullet',
           attributes: { permission: 'RoleManagement' }

@@ -2,9 +2,9 @@
   <c-col xs="12">
     <c-card class="mb-4">
       <c-card-header>
-        <strong>Users</strong>
+        <strong>{{'Users' | localize}}</strong>
         <br />
-        <small>User Management Table</small>
+        <small>{{'UserManagementTable' | localize}}</small>
       </c-card-header>
       <c-card-body>
         <div class="mb-3 p-3 d-flex justify-content-between">
@@ -20,7 +20,7 @@
             />
           </div>
           <button color="info" class="text-white me-4" (click)="getUsers()" cButton>
-            Search
+            {{'Search' | localize}}
           </button>
           <div>
             <label for="pageSize">Items per page:</label>

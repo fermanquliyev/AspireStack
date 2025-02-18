@@ -39,6 +39,10 @@
       <div class="nav-item py-1">
         <div class="vr h-100 mx-2 text-body text-opacity-75"></div>
       </div>
+      <ng-container *ngTemplateOutlet="languageDropdown" />
+      <div class="nav-item py-1">
+        <div class="vr h-100 mx-2 text-body text-opacity-75"></div>
+      </div>
       <ng-container *ngTemplateOutlet="themeDropdown" />
       <div class="nav-item py-1">
         <div class="vr h-100 mx-2 text-body text-opacity-75"></div>
@@ -177,6 +181,27 @@
         >
           <svg cIcon class="me-2" [name]="mode.icon" size="lg"></svg>
           {{ mode.text }}
+        </button>
+      }
+    </div>
+  </c-dropdown>
+</ng-template>
+
+<ng-template #languageDropdown>
+  <c-dropdown alignment="end" variant="nav-item">
+    <button [caret]="false" cDropdownToggle aria-label="Language picker">
+      <span class="fi fi-{{currentLanguageFlag()}} fis"></span>
+    </button>
+    <div cDropdownMenu>
+      @for (lang of languages(); track lang.name) {
+        <button
+          (click)="setLanguage(lang.name)"
+          [active]="currentLanguageFlag()===lang.icon"
+          cDropdownItem
+          class="d-flex align-items-center"
+        >
+        <span class="fi fi-{{lang.icon}} fis me-1"></span>
+          {{ lang.text }}
         </button>
       }
     </div>

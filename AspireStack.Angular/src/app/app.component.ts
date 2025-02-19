@@ -7,10 +7,6 @@ import { delay, filter, map, tap } from 'rxjs/operators';
 import { ColorModeService } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { iconSubset } from './icons/icon-subset';
-import { HttpClient } from '@angular/common/http';
-import { LocalizationService } from './services/localization/localization.service';
-import { ApiService } from './services/api-services/api-service-proxies';
-import { CurrentUserService } from './services/current-user.service';
 
 @Component({
     selector: 'app-root',
@@ -26,10 +22,6 @@ export class AppComponent implements OnInit {
 
   readonly #colorModeService = inject(ColorModeService);
   readonly #iconSetService = inject(IconSetService);
-
-  readonly #apiClient = inject(ApiService);
-
-  readonly #currentUser = inject(CurrentUserService);
 
   constructor() {
     this.#titleService.setTitle(this.title);

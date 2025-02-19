@@ -1,4 +1,4 @@
-export class AppConstants {
+export class Constants {
     static readonly API_ENDPOINT: string = 'https://api.example.com';
     static readonly APP_TITLE: string = 'AspireStack';
     static readonly DEFAULT_LANGUAGE: string = 'en-US';

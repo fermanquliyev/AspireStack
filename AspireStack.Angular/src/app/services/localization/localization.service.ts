@@ -1,36 +1,36 @@
 import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { ApiService } from '../api-services/api-service-proxies';
 import { tap } from 'rxjs';
-import { AppConstants } from 'src/app/app.constants';
+import { Constants } from 'src/constants';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LocalizationService {
 
-  private currentLanguage: string = AppConstants.DEFAULT_LANGUAGE;
+  private currentLanguage: string = Constants.DEFAULT_LANGUAGE;
   private apiService: ApiService = inject(ApiService);
   private static currentTranslation: {
     [key: string]: string
   } = {};
-  private static supportedLanguages = AppConstants.SUPPORTED_LANGUAGES;
+  private static supportedLanguages = Constants.SUPPORTED_LANGUAGES;
 constructor() { }
 
 
   public getCurrentLanguage(): string {
-    if (this.currentLanguage === AppConstants.DEFAULT_LANGUAGE) {
-      this.currentLanguage = localStorage.getItem(AppConstants.LANGUAGE_COOKIE_NAME) ?? AppConstants.DEFAULT_LANGUAGE;
+    if (this.currentLanguage === Constants.DEFAULT_LANGUAGE) {
+      this.currentLanguage = localStorage.getItem(Constants.LANGUAGE_COOKIE_NAME) ?? Constants.DEFAULT_LANGUAGE;
     }
     return this.currentLanguage;
   }
 
   public static getCurrentLanguage(): string {
-    return  localStorage.getItem(AppConstants.LANGUAGE_COOKIE_NAME) ?? AppConstants.DEFAULT_LANGUAGE;
+    return  localStorage.getItem(Constants.LANGUAGE_COOKIE_NAME) ?? Constants.DEFAULT_LANGUAGE;
   }
 
   public setCurrentLanguage(language: string): void {
     this.currentLanguage = language;
-    localStorage.setItem(AppConstants.LANGUAGE_COOKIE_NAME, language);
+    localStorage.setItem(Constants.LANGUAGE_COOKIE_NAME, language);
   }
 
   public loadTranslations(){

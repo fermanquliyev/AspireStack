@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom, inject, provideAppInitializer, provideEnvironmentInitializer, providePlatformInitializer } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import {
   provideRouter,
@@ -14,7 +14,7 @@ import { DropdownModule, SidebarModule } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { routes } from './app.routes';
 import { AuthInterceptorService } from './interceptors/auth-interceptor/AuthInterceptor.service';
-import { API_BASE_URL } from './services/api-services/api-service-proxies';
+import { API_BASE_URL, ApiService } from './services/api-services/api-service-proxies';
 import { HttpErrorInterceptor } from './interceptors/http-error-interceptor/http-error-interceptor';
 import { LanguageInterceptorService } from './interceptors/language-interceptor/language-interceptor';
 

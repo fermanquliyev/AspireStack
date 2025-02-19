@@ -23,7 +23,7 @@
             {{'Search' | localize}}
           </button>
           <div>
-            <label for="pageSize">Items per page:</label>
+            <label for="pageSize">{{'ItemsPerPage' | localize}}:</label>
             <select
               id="pageSize"
               [(ngModel)]="pageSize"
@@ -37,7 +37,7 @@
           
          </div>
           <button color="primary" (click)="createEditUserModal.open()" cButton>
-            Add User
+            {{'AddUser' | localize}}
           </button>
         </div>
         <table cTable class="table table-striped">
@@ -71,9 +71,9 @@
                   class="btn btn-sm btn-info text-white"
                   (click)="createEditUserModal.open(user.id)"
                 >
-                  Edit
+                  {{'Edit' | localize}}
                 </button>
-                <button class="btn btn-sm btn-danger text-white">Delete</button>
+                <button class="btn btn-sm btn-danger text-white">{{'Delete' | localize}}</button>
               </td>
             </tr>
           </tbody>
@@ -91,7 +91,7 @@
                 [class.disabled]="page === 1"
                 (click)="onPageChange(page - 1)"
               >
-                <a class="page-link" href="#">Previous</a>
+                <a class="page-link" href="#">{{'Previous' | localize}}</a>
               </li>
               <li
                 *ngFor="let p of [].constructor(totalPages); let i = index"
@@ -106,7 +106,7 @@
                 [class.disabled]="page === totalPages"
                 (click)="onPageChange(page + 1)"
               >
-                <a class="page-link" href="#">Next</a>
+                <a class="page-link" href="#">{{'Next' | localize}}</a>
               </li>
             </ul>
           </nav>

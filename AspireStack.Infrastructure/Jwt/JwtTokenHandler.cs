@@ -35,7 +35,8 @@ namespace AspireStack.Infrastructure.Jwt
                     {
                         foreach (var permission in role.Role.Permissions)
                         {
-                            claims.Add(new(CustomClaimTypes.Permission, permission));
+                            var permissionEnum = (int)PermissionNames.GetPermissionEnum(permission);
+                            claims.Add(new(CustomClaimTypes.Permission, permissionEnum.ToString()));
                         }
                     }
                 }

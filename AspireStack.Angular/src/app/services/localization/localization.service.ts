@@ -1,50 +1,59 @@
 import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
-import { CookieService } from '../Cookie.service';
 import { ApiService } from '../api-services/api-service-proxies';
+import { tap } from 'rxjs';
+import { AppConstants } from 'src/app/app.constants';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LocalizationService {
 
-  private currentLanguage: string = 'en-US';
-  private cookieService: CookieService = inject(CookieService);
+  private currentLanguage: string = AppConstants.DEFAULT_LANGUAGE;
   private apiService: ApiService = inject(ApiService);
-  private currentTranslation: WritableSignal<{
+  private static currentTranslation: {
     [key: string]: string
-  }> = signal({});
-  private supportedLanguages = signal(["en-US", "fr-FR", "tr-TR", "ru-RU", "az-AZ"]);
+  } = {};
+  private static supportedLanguages = AppConstants.SUPPORTED_LANGUAGES;
 constructor() { }
 
 
   public getCurrentLanguage(): string {
-    if (this.currentLanguage === 'en-US') {
-      this.currentLanguage = this.cookieService.getCookie('language') ?? 'en-US';
+    if (this.currentLanguage === AppConstants.DEFAULT_LANGUAGE) {
+      this.currentLanguage = localStorage.getItem(AppConstants.LANGUAGE_COOKIE_NAME) ?? AppConstants.DEFAULT_LANGUAGE;
     }
     return this.currentLanguage;
   }
 
+  public static getCurrentLanguage(): string {
+    return  localStorage.getItem(AppConstants.LANGUAGE_COOKIE_NAME) ?? AppConstants.DEFAULT_LANGUAGE;
+  }
+
   public setCurrentLanguage(language: string): void {
     this.currentLanguage = language;
-    this.cookieService.setCookie('language', language, 365);
+    localStorage.setItem(AppConstants.LANGUAGE_COOKIE_NAME, language);
   }
 
   public loadTranslations(){
-    this.apiService.getCurrentLocalization().subscribe((response) => {
-      this.currentTranslation.set(response.resources!);
-      this.supportedLanguages.set(response.supportedCultures!);
-    });
+    return this.apiService.getCurrentLocalization().pipe(tap((response)=>{
+      LocalizationService.currentTranslation = response.resources!;
+      LocalizationService.supportedLanguages = response.supportedCultures!;
+    }));
   }
 
-  public getSupportedLanguages = computed(() => {
-    return [...this.supportedLanguages()];
-  });
+  public static setTranslations(resources: any, supportedLanguages: any){
+    LocalizationService.currentTranslation = resources;
+    LocalizationService.supportedLanguages = supportedLanguages
+  }
+
+  public getSupportedLanguages() {
+    return [...LocalizationService.supportedLanguages];
+  };
 
   public getTranslation(key: string, ...args: any[]): string {
     if (args.length > 0) {
-      return this.formatString(this.currentTranslation()[key] ?? key, args);
+      return this.formatString(LocalizationService.currentTranslation[key] ?? key + ' NF!', args);
     }
-    return this.currentTranslation()[key] ?? key;
+    return LocalizationService.currentTranslation[key] ?? key + ' NF!';
   }
 
   private formatString(str: string, ...args: any[]): string {

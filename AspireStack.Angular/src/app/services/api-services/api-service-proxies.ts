@@ -68,7 +68,7 @@ export interface IApiService {
     /**
      * @return OkResult
      */
-    getAllPermissions(): Observable<string[]>;
+    getAllPermissions(): Observable<{ [key: string]: string; }>;
     /**
      * @return OkResult
      */
@@ -889,7 +889,7 @@ export class ApiService implements IApiService {
     /**
      * @return OkResult
      */
-    getAllPermissions(): Observable<string[]> {
+    getAllPermissions(): Observable<{ [key: string]: string; }> {
         let url_ = this.baseUrl + "/Role/GetAllPermissions";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -908,14 +908,14 @@ export class ApiService implements IApiService {
                 try {
                     return this.processGetAllPermissions(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<string[]>;
+                    return _observableThrow(e) as any as Observable<{ [key: string]: string; }>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<string[]>;
+                return _observableThrow(response_) as any as Observable<{ [key: string]: string; }>;
         }));
     }
 
-    protected processGetAllPermissions(response: HttpResponseBase): Observable<string[]> {
+    protected processGetAllPermissions(response: HttpResponseBase): Observable<{ [key: string]: string; }> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -926,10 +926,12 @@ export class ApiService implements IApiService {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(item);
+            if (resultData200) {
+                result200 = {} as any;
+                for (let key in resultData200) {
+                    if (resultData200.hasOwnProperty(key))
+                        (<any>result200)![key] = resultData200[key] !== undefined ? resultData200[key] : <any>null;
+                }
             }
             else {
                 result200 = <any>null;

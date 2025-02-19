@@ -123,15 +123,16 @@ internal static class Program
     /// <param name="authentication"></param>
     static void AddPolicies(AuthorizationOptions authentication)
     {
-        var permissionNames = PermissionNames.Permissions;
+        var permissionNames = PermissionNames.PermissionStrings;
         foreach (var permission in permissionNames)
         {
-            authentication.AddPolicy(permission, policy =>
+            authentication.AddPolicy(permission.Value, policy =>
             {
                 policy.RequireAuthenticatedUser();
                 policy.RequireAssertion(context =>
                 {
-                    return context.User.Claims.Where(x => x.Type == CustomClaimTypes.Permission).Any(x => x.Value.StartsWith(permission));
+                    var permisionEnum = (int)permission.Key;
+                    return context.User.Claims.Where(x => x.Type == CustomClaimTypes.Permission).Any(x => x.Value == permisionEnum.ToString());
                 });
             });
         }

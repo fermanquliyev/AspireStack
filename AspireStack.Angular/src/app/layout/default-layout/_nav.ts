@@ -24,7 +24,7 @@ export const navItems: INavData[] = [
           name: 'Role Managment',
           url: '/role-management',
           icon: 'nav-icon-bullet',
-          attributes: { permission: 'RoleManagement' }
+          attributes: { permission: 'UserManagement.Roles' }
         },
       ]
   }

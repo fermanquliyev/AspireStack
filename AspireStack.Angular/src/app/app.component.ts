@@ -9,6 +9,8 @@ import { IconSetService } from '@coreui/icons-angular';
 import { iconSubset } from './icons/icon-subset';
 import { HttpClient } from '@angular/common/http';
 import { LocalizationService } from './services/localization/localization.service';
+import { ApiService } from './services/api-services/api-service-proxies';
+import { CurrentUserService } from './services/current-user.service';
 
 @Component({
     selector: 'app-root',
@@ -25,19 +27,19 @@ export class AppComponent implements OnInit {
   readonly #colorModeService = inject(ColorModeService);
   readonly #iconSetService = inject(IconSetService);
 
-  readonly #localizationService = inject(LocalizationService);
+  readonly #apiClient = inject(ApiService);
+
+  readonly #currentUser = inject(CurrentUserService);
 
   constructor() {
-    this.#localizationService.loadTranslations();
     this.#titleService.setTitle(this.title);
     // iconSet singleton
     this.#iconSetService.icons = { ...iconSubset };
     this.#colorModeService.localStorageItemName.set('coreui-free-angular-admin-template-theme-default');
-    this.#colorModeService.eventName.set('ColorSchemeChange');
+    this.#colorModeService.eventName.set('ColorSchemeChange'); 
   }
 
   ngOnInit(): void {
-
     this.#router.events.pipe(
         takeUntilDestroyed(this.#destroyRef)
       ).subscribe((evt) => {

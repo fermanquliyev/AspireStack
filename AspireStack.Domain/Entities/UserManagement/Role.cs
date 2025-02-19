@@ -38,7 +38,7 @@ namespace AspireStack.Domain.Entities.UserManagement
 
             foreach (var permission in this.Permissions)
             {
-                if (!PermissionNames.Permissions.Contains(permission))
+                if (!PermissionNames.PermissionStrings.Any(x=>x.Value == permission))
                 {
                     throw new ValidationException($"Invalid permission {permission}");
                 }

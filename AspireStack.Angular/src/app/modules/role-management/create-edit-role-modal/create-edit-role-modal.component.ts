@@ -63,8 +63,8 @@ export class CreateEditRoleModalComponent implements OnInit {
 
   ngOnInit() {
     this.apiService.getAllPermissions().subscribe((perms) => {
-      this.permissions = perms;
-      perms.forEach((p) => (this.allPermissions[p] = false));
+      this.permissions = Object.values(perms);
+      this.permissions.forEach((p) => (this.allPermissions[p] = false));
     });
   }
 

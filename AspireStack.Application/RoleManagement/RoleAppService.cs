@@ -141,9 +141,9 @@ namespace AspireStack.Application.UserManagement
             await this.CacheClient.RemoveAsync($"role_{id}");
         }
 
-        public List<string> GetAllPermissions()
+        public Dictionary<string, string> GetAllPermissions()
         {
-            return PermissionNames.Permissions.ToList();
+            return PermissionNames.PermissionStrings.ToDictionary(x => ((int)x.Key).ToString(), x => x.Value);
         }
     }
 }

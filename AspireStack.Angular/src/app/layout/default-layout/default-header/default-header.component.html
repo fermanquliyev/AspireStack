@@ -13,13 +13,13 @@
     </button>
     <c-header-nav class="d-none d-md-flex">
       <c-nav-item>
-        <a cNavLink routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <a cNavLink routerLink="/dashboard" routerLinkActive="active">{{'Dashboard' | localize}}</a>
       </c-nav-item>
       <c-nav-item>
-        <a cNavLink routerLink="/users" routerLinkActive="active">Users</a>
+        <a cNavLink routerLink="/users" routerLinkActive="active">{{'Users' | localize}}</a>
       </c-nav-item>
       <c-nav-item>
-        <a cNavLink routerLink="/settings" routerLinkActive="active">Settings</a>
+        <a cNavLink routerLink="/settings" routerLinkActive="active">{{'Settings' | localize}}</a>
       </c-nav-item>
     </c-header-nav>
 
@@ -58,7 +58,7 @@
 
   </c-container>
   <c-container [fluid]="true" class="px-4">
-    <c-breadcrumb-router />
+    <c-breadcrumb-router #breadCrumbRouter />
   </c-container>
 </ng-container>
 <!--</c-header>-->
@@ -72,94 +72,36 @@
         src="./assets/images/avatars/8.jpg"
         status="success"
         textColor="primary"
-        alt="User avatar"
+        alt="{{'UserAvatar' | localize}}"
       />
     </button>
     <ul cDropdownMenu class="pt-0 w-auto">
       <li>
         <h6 cDropdownHeader class="bg-body-secondary text-body-secondary fw-semibold py-2 rounded-top">
-          Username: {{ currentUser.getUsername() }}
+          {{'Username' | localize}}: {{ currentUser.getUsername() }}
         </h6>
       </li>
       <li>
         <a cDropdownItem routerLink="">
           <svg cIcon class="me-2" name="cilBell"></svg>
-          Updates
+          {{'Notifications' | localize}}
           <c-badge class="ms-2 float-end" color="info"> 42</c-badge>
         </a>
-      </li>
-      <li>
-        <a cDropdownItem routerLink="/apps/email/inbox">
-          <svg cIcon class="me-2" name="cilEnvelopeOpen"></svg>
-          Messages
-          <c-badge class="ms-2 float-end" color="success">
-            42
-          </c-badge>
-        </a>
-      </li>
-      <li>
-        <a cDropdownItem routerLink="">
-          <svg cIcon class="me-2" name="cilTask"></svg>
-          Tasks
-          <c-badge class="ms-2 float-end" color="danger"> 42</c-badge>
-        </a>
-      </li>
-      <li>
-        <a cDropdownItem routerLink="">
-          <svg cIcon class="me-2" name="cilCommentSquare"></svg>
-          Comments
-          <c-badge class="ms-auto" color="warning"> 42</c-badge>
-        </a>
-      </li>
-      <li>
-        <h6 cDropdownHeader class="bg-body-secondary text-body-secondary fw-semibold py-2">
-          Settings
-        </h6>
       </li>
       <li></li>
       <li>
         <a cDropdownItem routerLink="">
           <svg cIcon class="me-2" name="cilUser"></svg>
-          Profile
-        </a>
-      </li>
-      <li>
-        <a cDropdownItem routerLink="">
-          <svg cIcon class="me-2" name="cilSettings"></svg>
-          Settings
-        </a>
-      </li>
-      <li>
-        <a cDropdownItem routerLink="">
-          <svg cIcon class="me-2" name="cilCreditCard"></svg>
-          Payments
-          <c-badge class="ms-2 float-end" color="secondary">
-            42
-          </c-badge>
-        </a>
-      </li>
-      <li>
-        <a cDropdownItem routerLink="">
-          <svg cIcon class="me-2" name="cilFile"></svg>
-          Projects
-          <c-badge class="ms-2 float-end" color="primary">
-            42
-          </c-badge>
+          {{'Profile' | localize}}
         </a>
       </li>
       <li>
         <hr cDropdownDivider />
       </li>
       <li>
-        <a cDropdownItem routerLink="">
-          <svg cIcon class="me-2" name="cilLockLocked"></svg>
-          Lock Account
-        </a>
-      </li>
-      <li>
         <a cDropdownItem href="javascript:void(0)" (click)="logout()">
           <svg cIcon class="me-2" name="cilAccountLogout"></svg>
-          Logout
+          {{'Logout' | localize}}
         </a>
       </li>
     </ul>
@@ -190,7 +132,7 @@
 <ng-template #languageDropdown>
   <c-dropdown alignment="end" variant="nav-item">
     <button [caret]="false" cDropdownToggle aria-label="Language picker">
-      <span class="fi fi-{{currentLanguageFlag()}} fis"></span>
+      <span class="fi fi-{{currentLanguageFlag()}}"></span>
     </button>
     <div cDropdownMenu>
       @for (lang of languages(); track lang.name) {
@@ -200,7 +142,7 @@
           cDropdownItem
           class="d-flex align-items-center"
         >
-        <span class="fi fi-{{lang.icon}} fis me-1"></span>
+        <span class="fi fi-{{lang.icon}} me-1"></span>
           {{ lang.text }}
         </button>
       }

@@ -60,9 +60,8 @@ export class LoginComponent {
       .login( new LoginRequest({ email: this.email(), password: this.password() }))
       .subscribe(response=>{
         const token = response.data ?? '';
-        const expInDays = this.currentUser.loadUserFromToken(token);
-        this.authService.setAuthToken(token, expInDays);
-        this.router.navigate(['/dashboard']);
+        this.authService.setAuthToken(token);
+        window.location.href = '/dashboard';
       });
   }
 }

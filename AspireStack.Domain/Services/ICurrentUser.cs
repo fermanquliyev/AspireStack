@@ -19,8 +19,8 @@ namespace AspireStack.Domain.Services
         public string? FirstName { get; }
         public string? LastName { get; }
         public string? PhoneNumber { get; }
-        public string[]? Roles { get; }
-        public string[]? Permissions { get; }
+        public IEnumerable<string> Roles { get; }
+        public IEnumerable<string> Permissions { get; }
         public bool IsAuthenticated { get; }
     }
 

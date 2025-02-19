@@ -1,4 +1,5 @@
 ﻿using AspireStack.Domain.Services;
+using AspireStack.Domain.Shared.UserManagement;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
@@ -23,17 +24,12 @@ namespace AspireStack.Infrastructure.Jwt
         }
 
         public string? Username => claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
-
         public string? Email => claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
-
         public string? FirstName => claims.FirstOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
-
         public string? LastName => claims.FirstOrDefault(x => x.Type == ClaimTypes.Surname)?.Value;
-
         public string? PhoneNumber => claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone)?.Value;
-
-        public string[]? Roles => claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToArray();
-        public string[]? Permissions => claims.Where(x => x.Type == ClaimTypes.Actor).Select(x => x.Value).ToArray();
+        public IEnumerable<string> Roles => claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value);
+        public IEnumerable<string> Permissions => claims.Where(x => x.Type == CustomClaimTypes.Permission).Select(x => x.Value);
 
         public bool IsAuthenticated => _isAuthenticated;
     }
@@ -57,18 +53,12 @@ namespace AspireStack.Infrastructure.Jwt
         }
 
         public string? Username => claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
-
         public string? Email => claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
-
         public string? FirstName => claims.FirstOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
-
         public string? LastName => claims.FirstOrDefault(x => x.Type == ClaimTypes.Surname)?.Value;
-
         public string? PhoneNumber => claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone)?.Value;
-
-        public string[]? Roles => claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToArray();
-        public string[]? Permissions => claims.Where(x => x.Type == ClaimTypes.Actor).Select(x => x.Value).ToArray();
-
+        public IEnumerable<string> Roles => claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value);
+        public IEnumerable<string> Permissions => claims.Where(x => x.Type == CustomClaimTypes.Permission).Select(x => x.Value);
         public bool IsAuthenticated => _isAuthenticated;
     }
 }

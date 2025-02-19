@@ -1,26 +1,28 @@
 import { Injectable } from '@angular/core';
-import { CookieService } from './Cookie.service';
 import { AppConstants } from '../app.constants';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  constructor(private cookieService: CookieService) {}
+  constructor() {}
 
   getAuthToken() {
-    return this.cookieService.getCookie(AppConstants.AUTH_TOKEN_COOKIE_NAME);
+    return localStorage.getItem(AppConstants.AUTH_TOKEN_COOKIE_NAME);
   }
 
-  setAuthToken(token: string, days: number) {
-    this.cookieService.setCookie(
+  static getAuthToken() {
+    return localStorage.getItem(AppConstants.AUTH_TOKEN_COOKIE_NAME);
+  }
+
+  setAuthToken(token: string) {
+    localStorage.setItem(
       AppConstants.AUTH_TOKEN_COOKIE_NAME,
-      token,
-      days
+      token
     );
   }
 
   deleteAuthToken() {
-    this.cookieService.deleteCookie(AppConstants.AUTH_TOKEN_COOKIE_NAME);
+    localStorage.removeItem(AppConstants.AUTH_TOKEN_COOKIE_NAME);
   }
 }

@@ -2,25 +2,26 @@ import { Injectable } from '@angular/core';
 import {jwtDecode} from 'jwt-decode';
 import { JwtPayload } from '../../types/JwtPayload';
 import { AuthService } from './auth-service.service';
+import { AppConstants } from '../app.constants';
 @Injectable({
   providedIn: 'root'
 })
 export class CurrentUserService {
-  private userId: string | null = null;
-  private username: string | null = null;
-  private isAuthenticated: boolean = false;
-  private permissions: string[] = [];
-  private roles: string | string[] = [];
-  private email: string = '';
-  private name: string = '';
-  private surname: string ='';
+  private static userId: string | null = null;
+  private static username: string | null = null;
+  private static isAuthenticated: boolean = false;
+  private static permissions: string[] = [];
+  private static roles: string | string[] = [];
+  private static email: string = '';
+  private static firstName: string = '';
+  private static surname: string ='';
+  private static allPermissions: { [key: string]: string } = {};
 
   constructor(private authService: AuthService) {
-    this.loadUserFromToken();
   }
 
-  public loadUserFromToken(authToken?:string): number {
-    const token = authToken ?? this.authService.getAuthToken();
+  public static loadUserFromToken(): number {
+    const token = AuthService.getAuthToken();
     if (token) {
       try {
         const decodedToken = jwtDecode<JwtPayload>(token);
@@ -31,7 +32,7 @@ export class CurrentUserService {
           this.permissions = decodedToken.permission;
           this.roles = decodedToken.role;
           this.email = decodedToken.email;
-          this.name = decodedToken.name;
+          this.firstName = decodedToken.name;
           this.surname = decodedToken.family_name;
           this.isAuthenticated = true;
         }
@@ -45,45 +46,50 @@ export class CurrentUserService {
   }
 
   public getPermissions(): string[] {
-    return this.permissions;
+    return CurrentUserService.permissions;
   }
 
   public getRoles(): string | string[] {
-    return this.roles;
+    return CurrentUserService.roles;
   }
 
   public getEmail(): string {
-    return this.email;
+    return CurrentUserService.email;
   }
 
   public getFullName(): string {
-    return `${this.name} ${this.surname}`;
+    return `${CurrentUserService.firstName} ${CurrentUserService.surname}`;
   }
 
-  public hasPermission(permission: string): boolean {
-    return this.permissions.some(p=> p.startsWith(permission));
+  public hasPermission(permissionValue: string): boolean {
+    let permissionKey = Object.keys(CurrentUserService.allPermissions).find(key => CurrentUserService.allPermissions[key].startsWith(permissionValue));
+    return CurrentUserService.permissions.some(p=> p.toString() == permissionKey?.toString());
   }
 
   public getUserId(): string | null {
-    return this.userId;
+    return CurrentUserService.userId;
   }
 
   public getUsername(): string | null {
-    return this.username;
+    return CurrentUserService.username;
   }
 
   public getIsAuthenticated(): boolean {
-    return this.isAuthenticated;
+    return CurrentUserService.isAuthenticated;
+  }
+
+  public static setAllPermissions(permissions: { [key: string]: string }): void { 
+    this.allPermissions = permissions;
   }
 
   public clear(): void {
-    this.userId = null;
-    this.username = null;
-    this.isAuthenticated = false;
-    this.permissions = [];
-    this.roles = [];
-    this.email = '';
-    this.name = '';
-    this.surname = '';
+    CurrentUserService.userId = null;
+    CurrentUserService.username = null;
+    CurrentUserService.isAuthenticated = false;
+    CurrentUserService.permissions = [];
+    CurrentUserService.roles = [];
+    CurrentUserService.email = '';
+    CurrentUserService.firstName = '';
+    CurrentUserService.surname = '';
   }
 }

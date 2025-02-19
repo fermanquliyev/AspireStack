@@ -19,7 +19,7 @@ namespace AspireStack.Infrastructure
                 {
                     Name = "Admin",
                     Description = "Admin role",
-                    Permissions = [.. PermissionNames.Permissions]
+                    Permissions = PermissionNames.PermissionStrings.Select(x => x.Value).ToArray()
                 };
                 dbContext.Roles.Add(adminRole);
                 dbContext.SaveChanges();

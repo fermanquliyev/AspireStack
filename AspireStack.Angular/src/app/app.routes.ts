@@ -10,6 +10,7 @@ const authGuard: CanActivateFn = (
   const currentUserService = inject(CurrentUserService);
   if (currentUserService.getIsAuthenticated()) {
     var permission = route.data['permission'];
+    console.log('Checking permission in guard: ' + permission);
     if(permission != null){
       if(!currentUserService.hasPermission(permission)){
         console.log('Not authorized, redirecting to dashboard');
@@ -57,7 +58,7 @@ export const routes: Routes = [
         loadChildren: () => import('./modules/role-management/routes').then((m) => m.routes),
         canActivate: [authGuard],
         data: {
-          permission: 'RoleManagement'
+          permission: 'UserManagement.Roles'
         }
       }
     ]

@@ -3,7 +3,6 @@ import * as coreui from '@coreui/angular';
 import { ApiService, GetUsersInput, UserDto, UserDtoPagedResult } from '../../services/api-services/api-service-proxies';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, NgFor } from '@angular/common';
-import "@angular/localize/init";
 import { CreateEditUserModalComponent } from './create-edit-user-modal/create-edit-user-modal.component';
 import { AppBaseComponent } from '../shared/components/base-component/AppBaseComponent';
 import { LocalizePipe } from '../shared/pipes/localization-pipe/localize.pipe';

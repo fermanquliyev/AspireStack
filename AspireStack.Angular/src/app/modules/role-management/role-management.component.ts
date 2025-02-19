@@ -3,8 +3,8 @@ import * as coreui from '@coreui/angular';
 import { ApiService, GetUsersInput, RoleDtoPagedResult, UserDto, UserDtoPagedResult, PagedResultRequest, RoleDto } from '../../services/api-services/api-service-proxies';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, NgFor } from '@angular/common';
-import "@angular/localize/init";
 import { CreateEditRoleModalComponent } from './create-edit-role-modal/create-edit-role-modal.component';
+import { AppBaseComponent } from '../shared/components/base-component/AppBaseComponent';
 
 
 @Component({
@@ -26,7 +26,7 @@ import { CreateEditRoleModalComponent } from './create-edit-role-modal/create-ed
     NgFor
   ]
 })
-export class RoleManagementComponent implements OnInit {
+export class RoleManagementComponent extends AppBaseComponent implements OnInit {
 
 
   public page = 1;
@@ -35,7 +35,9 @@ export class RoleManagementComponent implements OnInit {
   roles: RoleDtoPagedResult = new RoleDtoPagedResult();
   constructor(
     private client: ApiService
-  ) { }
+  ) { 
+    super();
+  }
 
   ngOnInit() {
   this.getRoles();
@@ -67,9 +69,5 @@ export class RoleManagementComponent implements OnInit {
     }
     this.pageSize = pageSize;
     this.getRoles();
-  }
-
-  public L(text: string) {
-    return $localize`${text}`;
   }
 }

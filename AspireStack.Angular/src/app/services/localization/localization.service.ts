@@ -43,6 +43,8 @@ constructor() { }
   public static setTranslations(resources: any, supportedLanguages: any){
     LocalizationService.currentTranslation = resources;
     LocalizationService.supportedLanguages = supportedLanguages
+    document.documentElement.lang = LocalizationService.getCurrentLanguage().split('-')[0];
+    
   }
 
   public getSupportedLanguages() {

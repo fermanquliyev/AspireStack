@@ -7,11 +7,11 @@ namespace AspireStack.Infrastructure.Jwt
     /// Provides an implementation of <see cref="IUserPasswordHasher{T}"/> that uses the ASP.NET Core Identity password hashing functionality <see cref="IPasswordHasher<T>"/>.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class AspirePasswordHasher<T> : IUserPasswordHasher<T> where T : class
+    public class DefaultPasswordHasher<T> : IUserPasswordHasher<T> where T : class
     {
         private readonly IPasswordHasher<T> passwordHasher;
 
-        public AspirePasswordHasher(IPasswordHasher<T> passwordHasher)
+        public DefaultPasswordHasher(IPasswordHasher<T> passwordHasher)
         {
             this.passwordHasher = passwordHasher;
         }

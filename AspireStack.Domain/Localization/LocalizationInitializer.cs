@@ -18,9 +18,9 @@ namespace AspireStack.Domain.Localization
             var resourceNames = assembly.GetManifestResourceNames().Where(f=>f.EndsWith("json"));
             foreach (var file in resourceNames)
             {
-                var jsonString = assembly.GetManifestResourceStream(file);
+                var jsonString = assembly.GetManifestResourceStream(file)!;
                 var jsonDocument = JsonDocument.Parse(jsonString);
-                var fileCulture = jsonDocument.RootElement.GetProperty("culture").GetString();
+                var fileCulture = jsonDocument.RootElement.GetProperty("culture").GetString()!;
                 var values = jsonDocument.RootElement.GetProperty("values").EnumerateObject();
 
                 foreach (var value in values)

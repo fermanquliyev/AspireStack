@@ -11,7 +11,7 @@ namespace AspireStack.Infrastructure
     {
         public static bool AddAdminUser(this AspireStackDbContext dbContext, string username, string password)
         {
-            var passwordHasher = new AspirePasswordHasher<User>(new PasswordHasher<User>());
+            var passwordHasher = new DefaultPasswordHasher<User>(new PasswordHasher<User>());
             var adminRole = dbContext.Roles.FirstOrDefault(r => r.Name == "Admin");
             if (adminRole == null)
             {

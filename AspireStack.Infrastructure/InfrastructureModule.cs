@@ -43,7 +43,7 @@ namespace AspireStack.Infrastructure
             builder.Services.AddScoped(typeof(ICurrentUser<>), typeof(CurrentUser<>));
             builder.Services.AddScoped(typeof(ICurrentUser), typeof(CurrentUser));
             builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
-            builder.Services.AddScoped(typeof(IUserPasswordHasher<>), typeof(AspirePasswordHasher<>));
+            builder.Services.AddScoped(typeof(IUserPasswordHasher<>), typeof(DefaultPasswordHasher<>));
             builder.Services.AddScoped<ICacheClient, CacheClient>();
             builder.Services.AddSingleton<ILocalizationProvider, LocalizationProvider>();
         }

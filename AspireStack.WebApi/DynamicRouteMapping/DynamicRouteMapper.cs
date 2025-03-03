@@ -4,8 +4,11 @@ using AspireStack.Domain.Cache;
 using AspireStack.Domain.Localization;
 using AspireStack.Domain.Repository;
 using AspireStack.Domain.Services;
+using AspireStack.WebApi.Host.Models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 
@@ -144,13 +147,21 @@ namespace AspireStack.WebApi.DynamicRouteMapping
                     {
                         // Query string for GET/DELETE
                         var value = context.Request.Query[param.Name ?? string.Empty].FirstOrDefault();
-                        AddQueryParamToMethodArgs(args, param, value);
+                        if (value == null && parameters.Length == 1 && context.Request.Query.Count > 1)
+                        {
+                           var arg = GetFromQueryString(param.ParameterType, context);
+                           args.Add(arg);
+                        }
+                        else
+                        {
+                            AddQueryParamToMethodArgs(args, param, value);
+                        }
                     }
                     else
                     {
                         // JSON body for POST/PUT
                         var body = await DeserializeAndValidateBodyAsync(context, param, localizationProvider);
-                        if(context.Response.StatusCode == 400)
+                        if (context.Response.StatusCode == 400)
                         {
                             return;
                         }
@@ -199,11 +210,34 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             return a;
         }
 
+        private static object GetFromQueryString(Type type, HttpContext httpContext)
+        {
+            var obj = Activator.CreateInstance(type);
+            var properties = type.GetProperties();
+            foreach (var property in properties)
+            {
+                var valueAsString = httpContext.Request.Query[property.Name];
+                var value = Parse(valueAsString, property.PropertyType);
+
+                if (value == null)
+                    continue;
+
+                property.SetValue(obj, value, null);
+            }
+            return obj;
+        }
+        private static object Parse(string valueToConvert, Type dataType)
+        {
+            TypeConverter obj = TypeDescriptor.GetConverter(dataType);
+            object value = obj.ConvertFromString(null, CultureInfo.InvariantCulture, valueToConvert);
+            return value;
+        }
+
         private static void AddQueryParamToMethodArgs(List<object> args, ParameterInfo param, string? value)
         {
             object? parsedValue = param.ParameterType switch
             {
-                Type t when t == typeof(Guid) || t == typeof(Guid?) => Guid.TryParse(value?.Replace("\"",""), out var guidValue) ? guidValue : (t == typeof(Guid?) ? (Guid?)null : Guid.Empty),
+                Type t when t == typeof(Guid) || t == typeof(Guid?) => Guid.TryParse(value?.Replace("\"", ""), out var guidValue) ? guidValue : (t == typeof(Guid?) ? (Guid?)null : Guid.Empty),
                 Type t when t == typeof(int) || t == typeof(int?) => int.TryParse(value?.Replace("\"", ""), out var intValue) ? intValue : (t == typeof(int?) ? (int?)null : 0),
                 Type t when t == typeof(double) || t == typeof(double?) => double.TryParse(value?.Replace("\"", ""), out var doubleValue) ? doubleValue : (t == typeof(double?) ? (double?)null : 0.0),
                 Type t when t == typeof(bool) || t == typeof(bool?) => bool.TryParse(value?.Replace("\"", ""), out var boolValue) ? boolValue : (t == typeof(bool?) ? (bool?)null : false),

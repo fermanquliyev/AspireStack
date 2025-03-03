@@ -10,7 +10,7 @@ namespace AspireStack.Infrastructure.Jwt
 {
     public class JwtTokenHandler : IUserTokenHandler
     {
-        public string GenerateUserToken(User user, TokenParameters parameters)
+        public string GenerateUserToken(User user, List<Role> roles, List<RoleClaim> roleClaims, TokenParameters parameters)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(parameters.Secret));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -19,24 +19,23 @@ namespace AspireStack.Infrastructure.Jwt
                     new(JwtRegisteredClaimNames.Name, user.FirstName),
                     new(JwtRegisteredClaimNames.Email, user.Email),
                     new(JwtRegisteredClaimNames.FamilyName, user.LastName),
-                    new(JwtRegisteredClaimNames.UniqueName, user.Username),
+                    new(JwtRegisteredClaimNames.UniqueName, user.UserName),
                     new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                     new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new(JwtRegisteredClaimNames.AuthTime, DateTime.Now.ToString()),
                     new(CustomClaimTypes.EmailVerified, user.EmailVerified.ToString())
                 };
 
-            if (user.Roles != null && user.Roles.Count != 0)
+            if (roles != null && roles.Count != 0)
             {
-                foreach (var role in user.Roles)
+                foreach (var role in roles)
                 {
-                    claims.Add(new(CustomClaimTypes.Role, role.Role.Name));
-                    if (role.Role.Permissions != null && role.Role.Permissions.Length != 0)
+                    claims.Add(new(CustomClaimTypes.Role, role.Name));
+                    if (roleClaims.Any(c=>c.RoleId == role.Id))
                     {
-                        foreach (var permission in role.Role.Permissions)
+                        foreach (var permission in roleClaims.Where(c => c.RoleId == role.Id))
                         {
-                            var permissionEnum = (int)PermissionNames.GetPermissionEnum(permission);
-                            claims.Add(new(CustomClaimTypes.Permission, permissionEnum.ToString()));
+                            claims.Add(new(CustomClaimTypes.Permission, permission.ClaimValue));
                         }
                     }
                 }

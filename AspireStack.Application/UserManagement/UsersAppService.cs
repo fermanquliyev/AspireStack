@@ -6,6 +6,7 @@ using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Domain.Services;
 using AspireStack.Domain.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 
 namespace AspireStack.Application.UserManagement
 {
@@ -38,13 +39,13 @@ namespace AspireStack.Application.UserManagement
         [AppServiceAuthorize(PermissionNames.User_View)]
         public async Task<CreateEditUserDto> GetUserByIdAsync(Guid id)
         {
-            var userQuery = UnitOfWork.Repository<User, Guid>().WithDetails(x => x.Roles).Where(x => x.Id == id);
-            var user = await AsyncExecuter.FirstOrDefaultAsync(userQuery);
+            var user = await UnitOfWork.Repository<User, Guid>().FindAsync(x => x.Id == id);
             if (user == null)
             {
                 throw new ApplicationException(L("UserNotFound"));
             }
-            var resultDto = CreateEditUserDto.FromUser(user);
+            var roles = await UnitOfWork.Repository<UserRole, string>().GetListAsync(ur => ur.UserId == user.Id);
+            var resultDto = CreateEditUserDto.FromUser(user, roles.Select(r=>r.RoleId));
 
             if(user.CreatorId.HasValue && user.CreatorId != Guid.Empty)
             {
@@ -70,7 +71,7 @@ namespace AspireStack.Application.UserManagement
         {
             var user = new User
             {
-                Username = input.Username,
+                UserName = input.Username,
                 FirstName = input.FirstName,
                 LastName = input.LastName,
                 Email = input.Email,
@@ -79,7 +80,7 @@ namespace AspireStack.Application.UserManagement
             await UnitOfWork.Repository<User, Guid>().InsertAsync(user);
             var randomPassword = GenerateRandomPassword();
             var passwordHash = userPasswordHasher.HashPassword(user, randomPassword);
-            user.PasswordHashed = passwordHash;
+            user.PasswordHash = passwordHash;
 
             if (input.RoleIds != null && input.RoleIds.Any())
             {
@@ -88,7 +89,7 @@ namespace AspireStack.Application.UserManagement
                     var role = await UnitOfWork.Repository<Role, Guid>().FindAsync(r => r.Id == roleId);
                     if (role != null)
                     {
-                        user.AddRole(role);
+                        await UnitOfWork.Repository<UserRole, string>().InsertAsync(new UserRole { UserId = user.Id, RoleId = role.Id });
                     }
                 }
             }
@@ -103,7 +104,7 @@ namespace AspireStack.Application.UserManagement
             var user = await UnitOfWork.Repository<User, Guid>().FindAsync(u => u.Id == input.Id);
             if (user != null)
             {
-                user.Username = input.Username;
+                user.UserName = input.Username;
                 user.FirstName = input.FirstName;
                 user.LastName = input.LastName;
                 user.PhoneNumber = input.PhoneNumber;
@@ -120,14 +121,11 @@ namespace AspireStack.Application.UserManagement
                     var role = await UnitOfWork.Repository<Role, Guid>().FindAsync(r => r.Id == roleId);
                     if (role != null)
                     {
-                        user.AddRole(role);
+                        await UnitOfWork.Repository<UserRole, string>().InsertAsync(new UserRole { UserId = user.Id, RoleId = role.Id });
                     }
                 }
 
-                foreach (var roleId in rolesToRemove)
-                {
-                    user.RemoveRole(roleId);
-                }
+                await UnitOfWork.Repository<UserRole, string>().DeleteDirectAsync(x => x.UserId == user.Id && rolesToRemove.Contains(x.RoleId));
 
                 await UnitOfWork.SaveChangesAsync();
             }
@@ -169,7 +167,7 @@ namespace AspireStack.Application.UserManagement
             {
                 if (!string.IsNullOrEmpty(currentPassword))
                 {
-                    var passwordVerificationResult = userPasswordHasher.VerifyHashedPassword(user, user.PasswordHashed, currentPassword);
+                    var passwordVerificationResult = userPasswordHasher.VerifyHashedPassword(user, user.PasswordHash, currentPassword);
                     if (passwordVerificationResult != PasswordVerificationResult.Success)
                     {
                         throw new ValidationException(L("InvalidCurrentPassword"));
@@ -177,7 +175,7 @@ namespace AspireStack.Application.UserManagement
                 }
 
                 var passwordHash = userPasswordHasher.HashPassword(user, newPassword);
-                user.PasswordHashed = passwordHash;
+                user.PasswordHash = passwordHash;
                 await UnitOfWork.Repository<User, Guid>().UpdateAsync(user);
                 await UnitOfWork.SaveChangesAsync();
             }

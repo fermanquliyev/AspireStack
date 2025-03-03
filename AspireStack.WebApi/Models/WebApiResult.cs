@@ -1,6 +1,6 @@
-namespace AspireStack.WebApi.DynamicRouteMapping
+namespace AspireStack.WebApi.Host.Models
 {
-    public class WebApiResult: WebApiResult<object>
+    public class WebApiResult : WebApiResult<object>
     {
     }
 

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Query;
 
 namespace AspireStack.Infrastructure.Repository
 {
-    public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : Entity<TKey>
+    public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : class, IEntity<TKey>
     {
         private readonly DbContext dbContext;
 

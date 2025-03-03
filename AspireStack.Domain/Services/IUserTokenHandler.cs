@@ -17,6 +17,6 @@ namespace AspireStack.Domain.Services
 
     public interface IUserTokenHandler
     {
-        string GenerateUserToken(User user, TokenParameters parameters);
+        string GenerateUserToken(User user, List<Role> roles, List<RoleClaim> roleClaims, TokenParameters parameters);
     }
 }

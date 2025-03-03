@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace AspireStack.Domain.Entities
 {
-    public abstract class Entity<T>
+    public interface IEntity<T>
     {
-        public virtual T Id { get; set; }
+        public T Id { get; set; }
     }
 }

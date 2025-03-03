@@ -1,3 +1,4 @@
+using AspireStack.WebApi.Host.Models;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
@@ -12,7 +13,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             var methodInfos = context.ApiDescription.ActionDescriptor.EndpointMetadata
                 .OfType<MethodInfo>().ToList();
             var methodInfo = methodInfos.FirstOrDefault(x => x.DeclaringType?.FullName?.Contains("AspireStack.Application") ?? false);
-            methodInfo ??= methodInfos.FirstOrDefault();
+            
             var requireAuthorization = context.ApiDescription.ActionDescriptor.EndpointMetadata
                 .OfType<string>().ToList().Any(x => x == "RequireAuthorization");
 
@@ -69,7 +70,7 @@ namespace AspireStack.WebApi.DynamicRouteMapping
             }
             if (requireAuthorization)
             {
-                op.Description += " This operation requires authorization.";
+                op.Description += " This operation requires authorization. ASPSTK.";
             }
 
             var returnType = method.ReturnType;

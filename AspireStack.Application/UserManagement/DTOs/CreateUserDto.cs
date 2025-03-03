@@ -28,19 +28,19 @@ namespace AspireStack.Application.UserManagement.DTOs
         [MinLength(1)]
         public List<Guid> RoleIds { get; set; }
 
-        public static CreateEditUserDto FromUser(User user)
+        public static CreateEditUserDto FromUser(User user, IEnumerable<Guid> roleIds)
         {
             return new CreateEditUserDto
             {
                 Id = user.Id,
-                Username = user.Username,
+                Username = user.UserName,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 CreationTime = user.CreationTime,
                 LastModificationTime = user.LastModificationTime,
-                RoleIds = user.Roles.Select(r => r.RoleId).ToList()
+                RoleIds = roleIds.ToList()
             };
         }
     }

@@ -19,7 +19,7 @@ namespace AspireStack.Infrastructure.Repository
         }
 
         public IRepository<TEntity, TKey> Repository<TEntity, TKey>()
-            where TEntity : Entity<TKey>
+            where TEntity : class, IEntity<TKey>
         {
             if (!_repositories.ContainsKey(typeof(TEntity)))
             {

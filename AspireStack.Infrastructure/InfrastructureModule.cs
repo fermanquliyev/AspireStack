@@ -40,8 +40,8 @@ namespace AspireStack.Infrastructure
             builder.Services.AddScoped(typeof(IRepository<,>), typeof(EfCoreRepository<,>));
             builder.Services.AddScoped(typeof(IUnitOfWork), typeof(EfUnitOfWork));
             builder.Services.AddScoped(typeof(IUserTokenHandler), typeof(JwtTokenHandler));
-            builder.Services.AddScoped(typeof(ICurrentUser<>), typeof(CurrentUser<>));
-            builder.Services.AddScoped(typeof(ICurrentUser), typeof(CurrentUser));
+            builder.Services.AddScoped<ICurrentUser<Guid>, CurrentUser<Guid>>();
+            builder.Services.AddScoped<ICurrentUser, CurrentUser>();
             builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
             builder.Services.AddScoped(typeof(IUserPasswordHasher<>), typeof(DefaultPasswordHasher<>));
             builder.Services.AddScoped<ICacheClient, CacheClient>();
@@ -53,7 +53,7 @@ namespace AspireStack.Infrastructure
         string connectionName,
         Action<NpgsqlDbContextOptionsBuilder>? configure = null) where TDbContext : DbContext
         {
-            builder.Services.AddDbContextPool<TDbContext>(options =>
+            builder.Services.AddDbContext<TDbContext>(options =>
             {
                 options.UseNpgsql(builder.Configuration.GetConnectionString(connectionName), npgsqlOptions =>
                 {

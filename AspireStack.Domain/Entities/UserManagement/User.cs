@@ -1,51 +1,28 @@
 
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace AspireStack.Domain.Entities.UserManagement
 {
-    public class User : Entity<Guid>, IAuditedEntity, IValidatedEntity
+    public class User : IdentityUser<Guid>, IAuditedEntity, IValidatedEntity, IEntity<Guid>
     {
-        public required string FirstName { get; set; }
-        public required string LastName { get; set; }
-        public required string Email { get; set; }
-        public string? PhoneNumber { get; set; }
+        public User()
+        {
+            
+        }
+
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
         public bool EmailVerified { get; set; }
         public bool PhoneNumberVerified { get; set; }
-        public string Username { get; set; }
-        public string PasswordHashed { get; set; }
         public DateTime CreationTime { get; set; }
         public DateTime? LastModificationTime { get; set; }
         public Guid? CreatorId { get; set; }
         public Guid? LastModifierId { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime? DeletionTime { get; set; }
-        public List<UserRole> Roles { get; set; }
 
-        public void AddRole(Role role)
-        {
-            if (Roles == null)
-            {
-                Roles = new List<UserRole>();
-            }
-            if (Roles.Any(r => r.RoleId == role.Id))
-            {
-                return;
-            }
-            Roles.Add(new UserRole
-            {
-                RoleId = role.Id,
-                UserId = Id
-            });
-        }
-
-        public void RemoveRole(Guid roleId)
-        {
-            if (Roles == null)
-            {
-                return;
-            }
-            Roles.RemoveAll(r => r.RoleId == roleId);
-        }
+        public virtual ICollection<UserRole> UserRoles { get; set; }
 
         public void Validate()
         {
@@ -69,12 +46,12 @@ namespace AspireStack.Domain.Entities.UserManagement
                 throw new ValidationException("Email is not valid");
             }
 
-            if (string.IsNullOrEmpty(Username))
+            if (string.IsNullOrEmpty(UserName))
             {
                 throw new ValidationException("Username is required");
             }
 
-            if (string.IsNullOrEmpty(PasswordHashed))
+            if (string.IsNullOrEmpty(PasswordHash))
             {
                 throw new ValidationException("Password is required");
             }

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace AspireStack.Domain.Repository
 {
     public interface IRepository<TEntity, TKey>
-    where TEntity : Entity<TKey>
+    where TEntity : class, IEntity<TKey>
     {
         /// <summary>
         /// Get a single entity by the given <paramref name="predicate"/>.

@@ -23,7 +23,7 @@ namespace AspireStack.Application.UserManagement.DTOs
             return new User
             {
                 Id = Id,
-                Username = Username,
+                UserName = Username,
                 Email = Email,
                 PhoneNumber = PhoneNumber,
                 FirstName = FirstName,
@@ -38,7 +38,7 @@ namespace AspireStack.Application.UserManagement.DTOs
             return new UserDto
             {
                 Id = user.Id,
-                Username = user.Username,
+                Username = user.UserName,
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 FirstName = user.FirstName,

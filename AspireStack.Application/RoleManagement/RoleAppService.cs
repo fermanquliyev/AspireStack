@@ -6,6 +6,8 @@ using AspireStack.Domain.Repository;
 using System.ComponentModel.DataAnnotations;
 using AspireStack.Application.AppService.DTOs;
 using System.Data;
+using Microsoft.AspNetCore.Identity;
+using AspireStack.Domain.Shared.UserManagement;
 
 namespace AspireStack.Application.UserManagement
 {
@@ -35,14 +37,16 @@ namespace AspireStack.Application.UserManagement
             {
                 throw new ValidationException(L("RoleNotFound"));
             }
+            var permissions = await AsyncExecuter.ToListAsync(UnitOfWork.Repository<RoleClaim, int>()
+                .GetQueryableAsNoTracking().Where(r => r.RoleId == id && r.ClaimType == CustomClaimTypes.Permission));
             role = new RoleDto
             {
                 Id = roleEntity.Id,
                 Name = roleEntity.Name,
                 Description = roleEntity.Description,
-                Permissions = roleEntity.Permissions,
                 CreationTime = roleEntity.CreationTime,
-                LastModificationTime = roleEntity.LastModificationTime
+                LastModificationTime = roleEntity.LastModificationTime,
+                Permissions = permissions != null ? permissions.Select(p => p.ClaimValue!).ToArray() : []
             };
             await this.CacheClient.SetAsync($"role_{id}", role, TimeSpan.FromMinutes(1));
             return role;
@@ -64,9 +68,14 @@ namespace AspireStack.Application.UserManagement
                 Id = role.Id,
                 Name = role.Name,
                 Description = role.Description,
-                Permissions = role.Permissions
             });
             roles = await AsyncExecuter.ToListAsync(query);
+            var allPermissions = await AsyncExecuter.ToListAsync(UnitOfWork.Repository<RoleClaim, int>()
+                .GetQueryableAsNoTracking().Where(r => r.ClaimType == CustomClaimTypes.Permission));
+            foreach (var role in roles)
+            {
+                role.Permissions = allPermissions.Where(p => p.RoleId == role.Id).Select(p => p.ClaimValue!).ToArray();
+            }
             await this.CacheClient.SetAsync("roles", roles, TimeSpan.FromMinutes(5));
             return roles;
         }
@@ -98,16 +107,26 @@ namespace AspireStack.Application.UserManagement
             {
                 Name = input.Name,
                 Description = input.Description,
-                Permissions = input.Permissions,
             };
 
             await roleRepository.InsertAsync(role, true);
+
+            foreach (var perm in input.Permissions)
+            {
+                await UnitOfWork.Repository<RoleClaim, int>().InsertAsync(new RoleClaim
+                {
+                    RoleId = role.Id,
+                    ClaimType = CustomClaimTypes.Permission,
+                    ClaimValue = perm,
+                });
+            }
+
             var roleDto = new RoleDto
             {
                 Id = role.Id,
                 Name = role.Name,
                 Description = role.Description,
-                Permissions = role.Permissions,
+                Permissions = input.Permissions,
                 CreationTime = DateTime.UtcNow
             };
             await this.CacheClient.SetAsync($"role_{role.Id}", roleDto, TimeSpan.FromMinutes(1));
@@ -123,7 +142,19 @@ namespace AspireStack.Application.UserManagement
             }
             role.Name = input.Name;
             role.Description = input.Description;
-            role.Permissions = input.Permissions;
+            
+            await UnitOfWork.Repository<RoleClaim, int>().DeleteDirectAsync(r => r.RoleId == role.Id);
+
+            foreach (var perm in input.Permissions)
+            {
+                await UnitOfWork.Repository<RoleClaim, int>().InsertAsync(new RoleClaim
+                {
+                    RoleId = role.Id,
+                    ClaimType = CustomClaimTypes.Permission,
+                    ClaimValue = perm,
+                });
+            }
+
 
             await roleRepository.UpdateAsync(role);
             await this.CacheClient.SetAsync($"role_{role.Id}", input, TimeSpan.FromMinutes(1));
@@ -138,12 +169,13 @@ namespace AspireStack.Application.UserManagement
                 throw new ValidationException(L("CantDeleteRoleWithUsers", string.Join(", ", userRoles.Select(u => u.UserId))));
             }
             await roleRepository.DeleteAsync(r => r.Id == id, true);
+            await UnitOfWork.Repository<RoleClaim, int>().DeleteDirectAsync(r => r.RoleId == id);
             await this.CacheClient.RemoveAsync($"role_{id}");
         }
 
-        public Dictionary<string, string> GetAllPermissions()
+        public List<string> GetAllPermissions()
         {
-            return PermissionNames.PermissionStrings.ToDictionary(x => ((int)x.Key).ToString(), x => x.Value);
+            return PermissionNames.PermissionStrings.ToList();
         }
     }
 }

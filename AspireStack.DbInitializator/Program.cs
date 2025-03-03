@@ -18,12 +18,14 @@ builder.Environment.EnvironmentName = envName;
 builder.Services.AddDbContext<AspireStackDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("AspireStackDb");
+
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(5);
         npgsqlOptions.MigrationsAssembly("AspireStack.DbInitializator");
     });
 });
+
 builder.Services.AddScoped<DbContext, AspireStackDbContext>();
 builder.AddInfrastructureServices();
 builder.Services.AddHttpContextAccessor();

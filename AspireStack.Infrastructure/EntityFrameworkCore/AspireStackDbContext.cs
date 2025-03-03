@@ -2,20 +2,32 @@ using AspireStack.Domain.Entities;
 using AspireStack.Domain.Entities.UserManagement;
 using AspireStack.Domain.Services;
 using AspireStack.Infrastructure.EntityFrameworkCore.EntityConfigurations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace AspireStack.Infrastructure.EntityFrameworkCore
 {
-    public class AspireStackDbContext(DbContextOptions<AspireStackDbContext> options, ICurrentUser<Guid> currentUser) : DbContext(options)
+    public class AspireStackDbContext
+        : IdentityDbContext<User, Role, Guid, IdentityUserClaim<Guid>, UserRole,
+            IdentityUserLogin<Guid>, RoleClaim, IdentityUserToken<Guid>>
     {
-        private readonly ICurrentUser<Guid> _currentUser = currentUser;
+        private readonly ICurrentUser currentUser;
+
+        public AspireStackDbContext(DbContextOptions options, ICurrentUser currentUser) : base(options)
+        {
+            this.currentUser = currentUser;
+        }
         private bool ChangesTracked { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ConfigureUserManagement();
 
-            base.OnModelCreating(modelBuilder);
+            // Don't call base.OnModelCreating()
+            // as it will call the IdentityDbContext.OnModelCreating()
+            // which will configure the identity tables again.
         }
 
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
@@ -56,13 +68,13 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore
                 foreach (var entity in added)
                 {
                     entity.Property("CreationTime").CurrentValue = DateTime.UtcNow;
-                    entity.Property("CreatorId").CurrentValue = _currentUser.Id;
+                    entity.Property("CreatorId").CurrentValue = currentUser.Id;
                 }
 
                 foreach (var entity in modified)
                 {
                     entity.Property("LastModificationTime").CurrentValue = DateTime.UtcNow;
-                    entity.Property("LastModifierId").CurrentValue = _currentUser.Id;
+                    entity.Property("LastModifierId").CurrentValue = currentUser.Id;
                 }
 
                 foreach (var entity in deleted)
@@ -74,9 +86,5 @@ namespace AspireStack.Infrastructure.EntityFrameworkCore
                 ChangesTracked = true;
             }
         }
-
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
     }
 }

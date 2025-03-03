@@ -9,7 +9,7 @@ namespace AspireStack.Domain.Repository
 {
     public interface IUnitOfWork : IDisposable
     {
-        IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : Entity<TKey>;
+        IRepository<TEntity, TKey> Repository<TEntity, TKey>() where TEntity : class, IEntity<TKey>;
         Task<int> SaveChangesAsync();
         int SaveChanges();
         IAsyncQueryableExecuter AsyncQueryableExecuter { get; }

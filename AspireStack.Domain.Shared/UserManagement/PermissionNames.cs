@@ -22,38 +22,16 @@ namespace AspireStack.Domain.Entities.UserManagement
         public const string Role_View = "UserManagement.Roles.View";
         #endregion
 
-        public enum Permission
-        {
-            User_Create,
-            User_Update,
-            User_Delete,
-            User_View,
-            Role_Create,
-            Role_Update,
-            Role_Delete,
-            Role_View
-        }
-
-        public static readonly IReadOnlyDictionary<Permission, string> PermissionStrings = new Dictionary<Permission, string>
+        public static readonly IReadOnlyList<string> PermissionStrings = new List<string>
             {
-                { Permission.User_Create, User_Create },
-                { Permission.User_Update, User_Update },
-                { Permission.User_Delete, User_Delete },
-                { Permission.User_View, User_View },
-                { Permission.Role_Create, Role_Create },
-                { Permission.Role_Update, Role_Update },
-                { Permission.Role_Delete, Role_Delete },
-                { Permission.Role_View, Role_View }
+                User_Create,
+                User_Update,
+                User_Delete,
+                User_View,
+                Role_Create,
+                Role_Update,
+                Role_Delete,
+                Role_View
             };
-
-        /// <summary>
-        /// Gets the permission string by enum.
-        /// </summary>
-        public static string GetPermissionString(Permission permission) => PermissionStrings[permission];
-
-        public static Permission GetPermissionEnum(string permission)
-        {
-            return PermissionStrings.FirstOrDefault(x => x.Value == permission).Key;
-        }
     }
 }
